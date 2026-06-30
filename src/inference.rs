@@ -21,9 +21,9 @@ pub fn load_model(artifact_dir: &str, device: &<NdArray as Backend>::Device) -> 
 
 /// Performs prediction on a raw 28x28 flattened image array.
 pub fn predict(model: &Model<NdArray>, raw_image: [f32; 784], device: &<NdArray as Backend>::Device) -> usize {
-    // 1. Convert the raw array into a 2D Burn Tensor: shape [1, 784]
+    // 1. Convert the raw array into a 4D Burn Tensor: shape [1, 1, 28, 28]
     let input = Tensor::<NdArray, 1>::from_floats(raw_image, device)
-        .reshape([1, 784]);
+        .reshape([1, 1, 28, 28]);
 
     // 2. Perform the forward pass (inference)
     let output = model.forward(input);
@@ -43,9 +43,9 @@ pub fn predict_probabilities(
     raw_image: [f32; 784],
     device: &<NdArray as Backend>::Device,
 ) -> (usize, Vec<f32>) {
-    // 1. Convert raw array to 2D Tensor [1, 784]
+    // 1. Convert raw array to 4D Tensor [1, 1, 28, 28]
     let input = Tensor::<NdArray, 1>::from_floats(raw_image, device)
-        .reshape([1, 784]);
+        .reshape([1, 1, 28, 28]);
 
     // 2. Perform forward pass
     let output = model.forward(input);

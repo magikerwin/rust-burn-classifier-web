@@ -17,7 +17,7 @@ impl<B: Backend> MnistBatcher<B> {
 
 #[derive(Clone, Debug)]
 pub struct MnistBatch<B: Backend> {
-    pub images: Tensor<B, 2>,
+    pub images: Tensor<B, 4>,
     pub targets: Tensor<B, 1, Int>,
 }
 
@@ -27,8 +27,8 @@ impl<B: Backend> Batcher<MnistItem, MnistBatch<B>> for MnistBatcher<B> {
             .iter()
             .map(|item| TensorData::from(item.image))
             .map(|data| Tensor::<B, 2>::from_data(data, &self.device))
-            // Reshape from [28, 28] to [1, 28 * 28] to flatten the image
-            .map(|tensor| tensor.reshape([1, 28 * 28]))
+            // Reshape from [28, 28] to [1, 1, 28, 28] to represent [batch, channel, height, width]
+            .map(|tensor| tensor.reshape([1, 1, 28, 28]))
             .collect::<Vec<_>>();
 
         let targets = items
@@ -72,7 +72,7 @@ mod tests {
         let batch = batcher.batch(vec![item1, item2]);
 
         let image_shape = batch.images.shape();
-        assert_eq!(image_shape.dims, [2, 28 * 28]);
+        assert_eq!(image_shape.dims, [2, 1, 28, 28]);
 
         let target_shape = batch.targets.shape();
         assert_eq!(target_shape.dims, [2]);
