@@ -1,15 +1,18 @@
 # 🔢 MNIST Digit Classifier — Burn (Rust)
 
 > An interactive MNIST handwritten digit classifier built with the [Burn](https://burn.dev/) deep learning framework in Rust. Train a CNN model, run inference from the CLI, or draw digits in the browser!
+> 
+> 🚀 **[Try the Live WebAssembly Demo here!](https://magikerwin.github.io/rust-burn-classifier-web/)**
 
-![image](assets/web_demo_mnist.png)
+![image](assets/web_demo_mnist.webp)
 
 ## ✨ Features
 
 - **CNN Architecture** — Conv2d → MaxPool → Conv2d → MaxPool → FC → FC with dropout
 - **Interactive Web Demo** — Draw digits on a canvas and get real-time predictions
+- **WebAssembly Client-Side Deployment** — Run inference directly in the browser via WASM with no backend server required
 - **CLI Inference** — Predict digits with ASCII art visualization
-- **Fully in Rust** — Training, inference, and web server in a single codebase
+- **Fully in Rust** — Training, inference, and web frontend in a unified workspace codebase
 
 ## 🏗️ Model Architecture
 
@@ -91,15 +94,42 @@ Model Prediction           : 7
 
 </details>
 
-### Run Interactive Web Server
+### Run Interactive Web Server (Axum backend)
 
-Start the browser-based drawing pad:
+Start the browser-based drawing pad backed by the Rust Axum server:
 
 ```sh
 cargo run --release -- --serve
 ```
 
-Then open **[http://127.0.0.1:3000](http://127.0.0.1:3000)** to draw digits and see real-time predictions!
+Then open **[http://127.0.0.1:3000](http://127.0.0.1:3000)** to draw digits and see predictions served via HTTP.
+
+### Run Client-Side WebAssembly App (WASM)
+
+Compile the model to WebAssembly to run inference fully inside the browser client-side (perfect for static hosting like GitHub Pages):
+
+1. **Install the WebAssembly packager**:
+   ```sh
+   cargo install wasm-pack
+   ```
+
+2. **Convert trained weights to binary format**:
+   ```sh
+   cargo run --bin convert
+   ```
+
+3. **Build the WASM module into the static frontend**:
+   ```sh
+   wasm-pack build web --target web --out-dir ../docs/pkg
+   ```
+
+4. **Serve the static frontend locally**:
+   Install and run `basic-http-server`:
+   ```sh
+   cargo install basic-http-server
+   basic-http-server docs
+   ```
+   Then navigate to **[http://localhost:4000](http://localhost:4000)** to draw digits and run serverless, client-side inference!
 
 ## 📚 References
 
