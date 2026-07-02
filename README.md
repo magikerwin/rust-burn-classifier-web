@@ -62,7 +62,12 @@ After 5 epochs of training, the CNN model achieves the following validation metr
 | **MNIST** (10 classes) | `~97%+` | `~0.10` |
 | **Quick, Draw!** (25 classes) | `~80% - 85%` | `~0.50 - 0.70` |
 
-![image](assets/training_mnist.png)
+<details>
+<summary>📈 View MNIST Training Progress Curve</summary>
+
+![MNIST Training Curve](assets/training_mnist.png)
+
+</details>
 
 ### Run Tests
 
