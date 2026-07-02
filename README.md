@@ -90,7 +90,7 @@ cargo run --release -- --predict --dataset quickdraw
 ```
 
 <details>
-<summary>📝 Example Output</summary>
+<summary>📝 Example Output (MNIST)</summary>
 
 ```text
 Loading model for inference...
@@ -122,6 +122,32 @@ Top Predictions:
   1. 7            : 99.42%
   2. 9            : 0.35%
   3. 2            : 0.11%
+```
+
+</details>
+
+<details>
+<summary>📝 Example Output (Quick, Draw!)</summary>
+
+```text
+Loading model for inference (dataset: quickdraw)...
+
+Input Image:
+         #          
+        ###         
+       #####        
+      #######       
+     #########      
+    ###########     
+   #############    
+  ###############   
+ #################  
+
+Target Label (Ground Truth): triangle
+Top Predictions:
+  1. triangle     : 96.81%
+  2. mountain     : 2.14%
+  3. house        : 0.45%
 ```
 
 </details>
