@@ -1,17 +1,13 @@
-// TODO: Remove #![allow(dead_code)] once this module is integrated in Phase 3
-#![allow(dead_code)]
-
-
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::Path;
 use burn::data::dataset::{vision::MnistItem, Dataset};
 
 pub const QUICKDRAW_CLASSES: [&str; 25] = [
-    "sun", "moon", "star", "cloud", "mountain", "tree", "flower",
+    "sun", "moon", "star", "tree", "flower",
     "cat", "dog", "fish", "butterfly", "cup", "key", "umbrella", "hat",
-    "clock", "envelope", "toothbrush", "house", "car", "smiley face", "heart",
-    "pants", "t-shirt", "apple"
+    "clock", "envelope", "toothbrush", "house", "car", "circle", "triangle", "square",
+    "smiley face", "pants", "t-shirt", "apple"
 ];
 
 pub const TRAIN_SAMPLES_PER_CLASS: usize = 2000;
@@ -236,13 +232,13 @@ mod tests {
 
         // Test training set construction (request 5 samples per class)
         let train_dataset = QuickDrawDataset::new(true, 5);
-        assert_eq!(train_dataset.len(), 25 * 5);
+        assert_eq!(train_dataset.len(), QUICKDRAW_CLASSES.len() * 5);
         let sample = train_dataset.get(0).unwrap();
         assert_eq!(sample.label, 0);
 
         // Test validation set construction (request 2 samples per class)
         let valid_dataset = QuickDrawDataset::new(false, 2);
-        assert_eq!(valid_dataset.len(), 25 * 2);
+        assert_eq!(valid_dataset.len(), QUICKDRAW_CLASSES.len() * 2);
 
         // Clean up only the mock files created during the test
         for path in created_paths {

@@ -145,11 +145,11 @@ We plan to expand this project to support doodle classification using the public
 
 ### Selected Categories (25 classes)
 Rather than training on all 345 categories (which totals 39 GB of raw bitmap data), we selected a curated subset of **25 diverse and easily sketchable classes**:
-* **Nature/Weather**: `sun`, `moon`, `star`, `cloud`, `mountain`, `tree`, `flower`
+* **Nature/Weather**: `sun`, `moon`, `star`, `tree`, `flower`
 * **Animals**: `cat`, `dog`, `fish`, `butterfly`
 * **Common Objects**: `cup`, `key`, `umbrella`, `hat`, `clock`, `envelope`, `toothbrush`
 * **Structures/Vehicles**: `house`, `car`
-* **Shapes/Drawings**: `smiley face`, `heart`
+* **Shapes/Drawings**: `circle`, `triangle`, `square`, `smiley face`
 * **Clothing**: `pants`, `t-shirt`
 * **Food**: `apple`
 

@@ -152,8 +152,6 @@ async fn main() {
         println!("\nTarget Label (Ground Truth): {}", sample.label);
         println!("Model Prediction           : {}", predicted_digit);
 
-
-
     } else {
         // ==========================================
         // BRANCH C: RUN TRAINING LOOP
