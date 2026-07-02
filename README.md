@@ -118,7 +118,10 @@ Input Image:
           ####              
                             
 Target Label (Ground Truth): 7
-Model Prediction           : 7
+Top Predictions:
+  1. 7            : 99.42%
+  2. 9            : 0.35%
+  3. 2            : 0.11%
 ```
 
 </details>

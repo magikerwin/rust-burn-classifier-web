@@ -20,6 +20,8 @@ pub fn load_model(artifact_dir: &str, device: &<NdArray as Backend>::Device, num
 }
 
 /// Performs prediction on a raw 28x28 flattened image array.
+// TODO: Remove this function and migrate its unit tests once all clients fully transition to using `predict_probabilities`.
+#[allow(dead_code)]
 pub fn predict(model: &Model<NdArray>, raw_image: [f32; 784], device: &<NdArray as Backend>::Device) -> usize {
     // 1. Convert the raw array into a 4D Burn Tensor: shape [1, 1, 28, 28]
     let input = Tensor::<NdArray, 1>::from_floats(raw_image, device)

@@ -11,7 +11,7 @@ use burn::{
     optim::AdamConfig,
 };
 use crate::training::{train, TrainingConfig};
-use crate::inference::{load_model, predict, predict_probabilities};
+use crate::inference::{load_model, predict_probabilities};
 
 use axum::{
     extract::State,
@@ -167,16 +167,25 @@ async fn main() {
             println!();
         }
 
-        // Perform prediction
-        let predicted_digit = predict(&model, flattened_image, &device);
-        let predicted_name = if dataset_arg == "quickdraw" {
-            quickdraw::QUICKDRAW_CLASSES[predicted_digit].to_string()
-        } else {
-            predicted_digit.to_string()
-        };
+        // Perform prediction and print top 3 probabilities
+        let (_predicted_digit, probabilities) = predict_probabilities(&model, flattened_image, &device);
+        
+        let mut prob_indices: Vec<(usize, f32)> = probabilities
+            .into_iter()
+            .enumerate()
+            .collect();
+        prob_indices.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         println!("\nTarget Label (Ground Truth): {}", class_name);
-        println!("Model Prediction           : {}", predicted_name);
+        println!("Top Predictions:");
+        for (i, (idx, prob)) in prob_indices.iter().take(3).enumerate() {
+            let name = if dataset_arg == "quickdraw" {
+                quickdraw::QUICKDRAW_CLASSES[*idx].to_string()
+            } else {
+                idx.to_string()
+            };
+            println!("  {}. {:<12} : {:.2}%", i + 1, name, prob * 100.0);
+        }
 
     } else {
         // ==========================================
