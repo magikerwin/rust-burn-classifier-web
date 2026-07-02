@@ -83,6 +83,12 @@ Once trained, predict digits from the MNIST test set:
 cargo run --release -- --predict
 ```
 
+To predict doodles from the Quick, Draw! test dataset:
+
+```sh
+cargo run --release -- --predict --dataset quickdraw
+```
+
 <details>
 <summary>📝 Example Output</summary>
 

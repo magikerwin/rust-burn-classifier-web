@@ -123,30 +123,42 @@ async fn main() {
         // ==========================================
         // BRANCH B: RUN CLI PREDICTION (TEST SAMPLE)
         // ==========================================
-        println!("Loading model for inference...");
+        println!("Loading model for inference (dataset: {})...", dataset_arg);
         let device = Default::default();
         let model = load_model(artifact_dir, &device, num_classes);
 
-        // Fetch a sample from the MNIST test dataset
-        let test_dataset = MnistDataset::test();
-        let sample_index = 0; // Pick the first test image
-        let sample = test_dataset.get(sample_index).expect("Failed to get sample");
-
-        // Flatten the 28x28 image grid into a 784 array
-        let mut flattened_image = [0.0f32; 784];
-        for i in 0..28 {
-            for j in 0..28 {
-                flattened_image[i * 28 + j] = sample.image[i][j];
+        // Fetch a sample from the selected dataset
+        let (flattened_image, class_name) = if dataset_arg == "quickdraw" {
+            let test_dataset = quickdraw::QuickDrawDataset::new(false, 1);
+            let sample = test_dataset.get(0).expect("Failed to get sample");
+            let mut flattened_image = [0.0f32; 784];
+            for i in 0..28 {
+                for j in 0..28 {
+                    flattened_image[i * 28 + j] = sample.image[i][j];
+                }
             }
-        }
+            let label = sample.label as usize;
+            (flattened_image, quickdraw::QUICKDRAW_CLASSES[label].to_string())
+        } else {
+            let test_dataset = MnistDataset::test();
+            let sample = test_dataset.get(0).expect("Failed to get sample");
+            let mut flattened_image = [0.0f32; 784];
+            for i in 0..28 {
+                for j in 0..28 {
+                    flattened_image[i * 28 + j] = sample.image[i][j];
+                }
+            }
+            let label = sample.label as usize;
+            (flattened_image, label.to_string())
+        };
 
-        // Draw a simple ASCII art representing the input digit
+        // Draw a simple ASCII art representing the input
         println!("\nInput Image:");
         for i in 0..28 {
             for j in 0..28 {
-                if sample.image[i][j] > 0.5 {
+                if flattened_image[i * 28 + j] > 0.5 {
                     print!("#");
-                } else if sample.image[i][j] > 0.1 {
+                } else if flattened_image[i * 28 + j] > 0.1 {
                     print!(".");
                 } else {
                     print!(" ");
@@ -157,8 +169,14 @@ async fn main() {
 
         // Perform prediction
         let predicted_digit = predict(&model, flattened_image, &device);
-        println!("\nTarget Label (Ground Truth): {}", sample.label);
-        println!("Model Prediction           : {}", predicted_digit);
+        let predicted_name = if dataset_arg == "quickdraw" {
+            quickdraw::QUICKDRAW_CLASSES[predicted_digit].to_string()
+        } else {
+            predicted_digit.to_string()
+        };
+
+        println!("\nTarget Label (Ground Truth): {}", class_name);
+        println!("Model Prediction           : {}", predicted_name);
 
     } else {
         // ==========================================

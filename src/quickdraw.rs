@@ -4,10 +4,9 @@ use std::path::Path;
 use burn::data::dataset::{vision::MnistItem, Dataset};
 
 pub const QUICKDRAW_CLASSES: [&str; 25] = [
-    "sun", "moon", "star", "tree", "flower",
+    "triangle", "circle", "square", "sun", "moon", "star", "tree", "flower",
     "cat", "dog", "fish", "butterfly", "cup", "key", "umbrella", "hat",
-    "clock", "envelope", "toothbrush", "house", "car", "circle", "triangle", "square",
-    "smiley face", "pants", "t-shirt", "apple"
+    "clock", "envelope", "toothbrush", "house", "car", "smiley face", "pants", "t-shirt", "apple"
 ];
 
 pub const TRAIN_SAMPLES_PER_CLASS: usize = 2000;
