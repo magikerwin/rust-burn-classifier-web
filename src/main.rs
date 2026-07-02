@@ -89,7 +89,7 @@ async fn main() {
         // ==========================================
         println!("Loading model for web server...");
         let device = Default::default(); // NdArray CPU device
-        let model = Arc::new(std::sync::Mutex::new(load_model(artifact_dir, &device)));
+        let model = Arc::new(std::sync::Mutex::new(load_model(artifact_dir, &device, 10)));
         let state = AppState { model, device };
 
         // Construct Axum application routing
@@ -115,7 +115,7 @@ async fn main() {
         // ==========================================
         println!("Loading model for inference...");
         let device = Default::default();
-        let model = load_model(artifact_dir, &device);
+        let model = load_model(artifact_dir, &device, 10);
 
         // Fetch a sample from the MNIST test dataset
         let test_dataset = MnistDataset::test();
@@ -170,6 +170,7 @@ async fn main() {
                 burn::backend::wgpu::WgpuDevice::default(),
                 train_dataset,
                 valid_dataset,
+                10,
             );
         } else {
             println!("Starting MNIST training on CPU (NdArray backend)...");
@@ -179,6 +180,7 @@ async fn main() {
                 Default::default(),
                 train_dataset,
                 valid_dataset,
+                10,
             );
         }
         println!("Training finished! Model saved successfully to {}", artifact_dir);

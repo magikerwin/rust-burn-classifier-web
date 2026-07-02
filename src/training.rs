@@ -40,6 +40,7 @@ pub fn train<B: AutodiffBackend, D1, D2>(
     device: B::Device,
     train_dataset: D1,
     valid_dataset: D2,
+    num_classes: usize,
 ) where
     D1: Dataset<burn::data::dataset::vision::MnistItem> + 'static,
     D2: Dataset<burn::data::dataset::vision::MnistItem> + 'static,
@@ -81,7 +82,7 @@ pub fn train<B: AutodiffBackend, D1, D2>(
         .devices(vec![device.clone()])
         .num_epochs(config.num_epochs)
         .build(
-            Model::<B>::new(&device), // Instantiate the MLP model
+            Model::<B>::new(&device, num_classes), // Instantiate the MLP model
             config.optimizer.init(),  // Initialize the optimizer state
             1e-4,                    // Learning rate
         );
@@ -159,7 +160,7 @@ mod tests {
         config.num_workers = 1;
 
         // 3. Dry-run training on the mock dataset (will finish instantly)
-        train::<TestBackend, _, _>(artifact_dir, config, device, train_dataset, valid_dataset);
+        train::<TestBackend, _, _>(artifact_dir, config, device, train_dataset, valid_dataset, 10);
 
         // 4. Verify that parameters were successfully optimized and saved
         assert!(std::path::Path::new(&format!("{artifact_dir}/model.mpk")).exists() 

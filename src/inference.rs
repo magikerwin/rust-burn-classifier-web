@@ -7,7 +7,7 @@ use burn::{
 };
 
 /// Loads the trained model weights from the artifact directory and returns the Model.
-pub fn load_model(artifact_dir: &str, device: &<NdArray as Backend>::Device) -> Model<NdArray> {
+pub fn load_model(artifact_dir: &str, device: &<NdArray as Backend>::Device, num_classes: usize) -> Model<NdArray> {
     let recorder = CompactRecorder::new();
     
     // Load the saved weights using the compact recorder
@@ -16,7 +16,7 @@ pub fn load_model(artifact_dir: &str, device: &<NdArray as Backend>::Device) -> 
         .expect("Failed to load model parameters");
 
     // Reconstruct the model architecture and load the weights
-    Model::<NdArray>::new(device).load_record(record)
+    Model::<NdArray>::new(device, num_classes).load_record(record)
 }
 
 /// Performs prediction on a raw 28x28 flattened image array.
@@ -67,7 +67,7 @@ mod tests {
     #[test]
     fn test_predict() {
         let device = Default::default();
-        let model = Model::<NdArray>::new(&device);
+        let model = Model::<NdArray>::new(&device, 10);
 
         // Run prediction on a dummy image (all zeros)
         let dummy_image = [0.0f32; 784];
@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn test_predict_probabilities() {
         let device = Default::default();
-        let model = Model::<NdArray>::new(&device);
+        let model = Model::<NdArray>::new(&device, 10);
 
         let dummy_image = [0.0f32; 784];
         let (predicted_digit, probabilities) = predict_probabilities(&model, dummy_image, &device);

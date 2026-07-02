@@ -15,7 +15,7 @@ fn main() {
         .load(format!("{artifact_dir}/model").into(), &device)
         .expect("Failed to load model parameters");
     
-    let model = Model::<NdArray>::new(&device).load_record(record);
+    let model = Model::<NdArray>::new(&device, 10).load_record(record);
     
     println!("Saving model with BinFileRecorder (model.bin)...");
     model
