@@ -31,17 +31,18 @@ jobs:
         run: |
           wasm-pack build web --target web --out-dir ../docs/pkg
 
-      # Copy all of docs/ into a clean staging directory outside the repo workspace.
-      # This bypasses the .gitignore filter that peaceiris/actions-gh-pages applies,
-      # ensuring docs/pkg/ (which is gitignored in master) is included in the deployment.
+      # Deploy docs/ directly to gh-pages branch via git.
+      # We avoid peaceiris/actions-gh-pages because it internally respects .gitignore
+      # and filters out docs/pkg/ which is gitignored in the master branch.
       # Reference: https://github.com/peaceiris/actions-gh-pages/issues/445
-      - name: Copy docs to staging directory
-        run: |
-          mkdir -p /tmp/gh-pages-staging
-          cp -r docs/. /tmp/gh-pages-staging/
-
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: /tmp/gh-pages-staging
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages || true
+          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
+          git rm -rf . --quiet || true
+          cp -r docs/. .
+          git add -f .
+          git commit -m "Deploy to gh-pages [skip ci]" || echo "Nothing to commit"
+          git push origin gh-pages
