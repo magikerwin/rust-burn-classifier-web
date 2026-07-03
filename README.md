@@ -154,13 +154,19 @@ Top Predictions:
 
 ### Run Interactive Web Server (Axum backend)
 
-Start the browser-based drawing pad backed by the Rust Axum server:
+Start the browser-based drawing pad backed by the Rust Axum server. The web server dynamically configures its UI categories and canvas configuration depending on which dataset you select:
 
-```sh
-cargo run --release -- --serve
-```
+- **Run with MNIST Digits (default)**:
+  ```sh
+  cargo run --release -- --serve
+  ```
+  Then open **[http://127.0.0.1:3000](http://127.0.0.1:3000)** to draw digits (0-9) and run predictions.
 
-Then open **[http://127.0.0.1:3000](http://127.0.0.1:3000)** to draw digits and see predictions served via HTTP.
+- **Run with Quick, Draw! Doodles**:
+  ```sh
+  cargo run --release -- --serve --dataset quickdraw
+  ```
+  Then open **[http://127.0.0.1:3000](http://127.0.0.1:3000)** to draw and predict doodles (25 classes).
 
 ### Run Client-Side WebAssembly App (WASM)
 
@@ -189,12 +195,12 @@ Compile the model to WebAssembly to run inference fully inside the browser clien
    ```
    Then navigate to **[http://localhost:4000](http://localhost:4000)** to draw digits and run serverless, client-side inference!
 
-## 🔮 Future Direction: Quick, Draw! Classification
+## 🎨 Quick, Draw! Classification Details
 
-We plan to expand this project to support doodle classification using the public Google **[Quick, Draw! Dataset](https://github.com/googlecreativelab/quickdraw-dataset)**. 
+This project supports doodle classification using the public Google **[Quick, Draw! Dataset](https://github.com/googlecreativelab/quickdraw-dataset)**. 
 
 ### Selected Categories (25 classes)
-Rather than training on all 345 categories (which totals 39 GB of raw bitmap data), we selected a curated subset of **25 diverse and easily sketchable classes**:
+Rather than training on all 345 categories (which totals 39 GB of raw bitmap data), we train on a curated subset of **25 diverse and easily sketchable classes**:
 * **Nature/Weather**: `sun`, `moon`, `star`, `tree`, `flower`
 * **Animals**: `cat`, `dog`, `fish`, `butterfly`
 * **Common Objects**: `cup`, `key`, `umbrella`, `hat`, `clock`, `envelope`, `toothbrush`
