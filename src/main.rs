@@ -51,7 +51,7 @@ struct PredictResponse {
 
 /// Handler that serves the HTML drawing canvas frontend page
 async fn index_handler() -> Html<&'static str> {
-    Html(include_str!("index.html"))
+    Html(include_str!("../docs/index.html"))
 }
 
 /// Handler that handles post requests to run model predictions on drawing inputs
