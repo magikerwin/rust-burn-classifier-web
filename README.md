@@ -170,30 +170,45 @@ Start the browser-based drawing pad backed by the Rust Axum server. The web serv
 
 ### Run Client-Side WebAssembly App (WASM)
 
-Compile the model to WebAssembly to run inference fully inside the browser client-side (perfect for static hosting like GitHub Pages):
+This project compiles the trained models into WebAssembly to run inference fully client-side. To avoid Git binary bloat, the model weights are **completely decoupled** from Git history and LFS:
+- **Locally**: `build.rs` automatically copies fresh weights from `target/` on compilation.
+- **In CI (GitHub Actions)**: `build.rs` automatically downloads stable weights from GitHub Releases using `curl` at build time.
 
-1. **Install the WebAssembly packager**:
+#### 1. Compile the WASM bundle locally
+Make sure you have trained the models locally first. Then run:
+
+1. **Install wasm-pack**:
    ```sh
    cargo install wasm-pack
    ```
 
-2. **Convert trained weights to binary format**:
-   ```sh
-   cargo run --bin convert
-   ```
-
-3. **Build the WASM module into the static frontend**:
+2. **Build the WebAssembly module**:
    ```sh
    wasm-pack build web --target web --out-dir ../docs/pkg
    ```
 
-4. **Serve the static frontend locally**:
+3. **Serve the frontend locally**:
    Install and run `basic-http-server`:
    ```sh
    cargo install basic-http-server
    basic-http-server docs
    ```
-   Then navigate to **[http://localhost:4000](http://localhost:4000)** to draw digits and run serverless, client-side inference!
+   Navigate to **[http://localhost:4000](http://localhost:4000)** to run serverless inference.
+
+#### 2. Automatic Deployments & Release Management
+The project includes a GitHub Action workflow that automatically compiles and deploys your static page to the `gh-pages` branch whenever you push changes to `master`.
+
+To update the online weights used by the CI runner:
+1. Ensure the GitHub CLI (`gh`) is installed and authenticated.
+2. Run the helper script to create/update release `v1.0.0` and upload your local weights:
+   ```powershell
+   ./publish-weights.ps1
+   ```
+3. Push your code changes to GitHub:
+   ```sh
+   git push origin master
+   ```
+4. Verify your repository settings under **Settings -> Pages** is configured to serve from the **`gh-pages`** branch (root).
 
 ## 🎨 Quick, Draw! Classification Details
 
