@@ -199,7 +199,9 @@ Make sure you have trained the models locally first. Then run:
 The project includes a GitHub Action workflow that automatically compiles and deploys your static page to the `gh-pages` branch whenever you push changes to `master`.
 
 To update the online weights used by the CI runner:
-1. Ensure the GitHub CLI (`gh`) is installed and authenticated.
+1. Ensure the GitHub CLI (`gh`) is installed and authenticated. If not:
+   - **Install** (Windows): `winget install --id GitHub.cli` (restart terminal after installing)
+   - **Authenticate**: `gh auth login` (choose GitHub.com -> HTTPS -> Authenticate via browser)
 2. Run the helper script to upload your local weights to a GitHub release (defaults to `v1.0.0`):
    ```powershell
    # Default v1.0.0
