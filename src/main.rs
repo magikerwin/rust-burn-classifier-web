@@ -22,11 +22,18 @@ use axum::{
 use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Serialize)]
+struct AppConfig {
+    dataset: String,
+    classes: Vec<String>,
+}
+
 /// Shared state across the web server requests
 #[derive(Clone)]
 struct AppState {
     model: Arc<std::sync::Mutex<crate::model::Model<NdArray>>>,
     device: <NdArray as burn::prelude::Backend>::Device,
+    config: AppConfig,
 }
 
 /// JSON payload structure for /predict requests
@@ -76,6 +83,13 @@ async fn predict_handler(
     })
 }
 
+/// Handler that serves the dataset and labels configuration
+async fn config_handler(
+    State(state): State<AppState>,
+) -> Json<AppConfig> {
+    Json(state.config.clone())
+}
+
 #[tokio::main]
 async fn main() {
     // CLI argument parsing
@@ -100,12 +114,23 @@ async fn main() {
         println!("Loading model for web server...");
         let device = Default::default(); // NdArray CPU device
         let model = Arc::new(std::sync::Mutex::new(load_model(artifact_dir, &device, num_classes)));
-        let state = AppState { model, device };
+        
+        let classes = if dataset_arg == "quickdraw" {
+            quickdraw::QUICKDRAW_CLASSES.iter().map(|&s| s.to_string()).collect()
+        } else {
+            (0..10).map(|i| i.to_string()).collect()
+        };
+        let config = AppConfig {
+            dataset: dataset_arg.to_string(),
+            classes,
+        };
+        let state = AppState { model, device, config };
 
         // Construct Axum application routing
         let app = Router::new()
             .route("/", get(index_handler))
             .route("/predict", post(predict_handler))
+            .route("/api/config", get(config_handler))
             .with_state(state);
 
         // Bind TCP listener to port 3000
