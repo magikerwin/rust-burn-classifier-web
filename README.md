@@ -210,10 +210,12 @@ To update the online weights used by the CI runner:
    # Or specify a custom version tag
    ./publish-weights.ps1 -Version v2.0.0
    ```
-3. Push your code changes to GitHub:
-   ```sh
-   git push origin master
-   ```
+3. Trigger the deployment:
+   - **If you made code changes**: Push your commits to master:
+     ```sh
+     git push origin master
+     ```
+   - **If you only updated model weights**: Go to the **Actions** tab on your GitHub repository page, select the **Deploy WebAssembly to GitHub Pages** workflow, and click the **Run workflow** dropdown button.
 4. Verify your repository settings under **Settings -> Pages** is configured to serve from the **`gh-pages`** branch (root).
 
 ## 🎨 Quick, Draw! Classification Details
