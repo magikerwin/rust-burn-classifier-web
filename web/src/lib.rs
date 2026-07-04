@@ -1,5 +1,3 @@
-mod model;
-
 use wasm_bindgen::prelude::*;
 use burn::{
     backend::NdArray,
@@ -8,7 +6,8 @@ use burn::{
     record::{BinBytesRecorder, FullPrecisionSettings, Recorder},
     tensor::activation::softmax,
 };
-use crate::model::Model;
+use rust::model::Model;
+
 
 #[wasm_bindgen]
 pub struct MnistPredictor {
