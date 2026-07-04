@@ -12,11 +12,8 @@ permissions:
   id-token: write   # Required for OIDC authentication with the Pages API
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -55,6 +52,13 @@ jobs:
         with:
           path: ./docs
 
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build  # Only runs after build succeeds
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
