@@ -7,11 +7,16 @@ on:
   workflow_dispatch: # Allows manual trigger from the GitHub Actions tab (e.g., after uploading new model weights)
 
 permissions:
-  contents: write
+  contents: read    # Only need to read the source — no longer pushing to gh-pages
+  pages: write      # Required to deploy to GitHub Pages via the API
+  id-token: write   # Required for OIDC authentication with the Pages API
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -39,39 +44,20 @@ jobs:
           test -f docs/pkg/mnist_web_bg.wasm  || (echo "MISSING: docs/pkg/mnist_web_bg.wasm" && exit 1)
           echo "All required files present. Proceeding with deployment."
 
-      # Deploy docs/ directly to gh-pages branch via git instead of using peaceiris/actions-gh-pages.
-      # Two reasons:
-      #   1. peaceiris/actions-gh-pages internally respects .gitignore, filtering out docs/pkg/
-      #      (which is gitignored in master to avoid committing build artifacts).
-      #   2. wasm-pack auto-generates a .gitignore inside docs/pkg/, which blocks `git add`
-      #      even with -f, so we explicitly delete it before staging.
-      # Reference: https://github.com/peaceiris/actions-gh-pages/issues/445
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      # upload-pages-artifact zips docs/ as-is, ignoring .gitignore entirely.
+      # This means docs/pkg/ (including the WASM binary) is always included,
+      # with no workarounds needed for gitignore filtering.
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs
+
       - name: Deploy to GitHub Pages
-        run: |
-          set -euo pipefail
-          # Remove any .gitignore files inside docs/ so they don't block git add
-          find docs -name ".gitignore" -delete
-
-          # Save the built docs/ into a temp dir before switching branches
-          cp -r docs /tmp/gh-pages-content
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin gh-pages || true
-          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
-
-          # Wipe everything in the branch
-          git rm -rf . --quiet || true
-
-          # Copy docs/ *contents* (not the folder itself) to the branch root
-          cp -r /tmp/gh-pages-content/. .
-
-          echo "=== Files to be committed ==="
-          find . -not -path './.git/*' | sort
-
-          git add -f .
-          git commit -m "Deploy to gh-pages [skip ci]" || echo "Nothing to commit"
-          git push origin gh-pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: Verify live deployment
         run: |
