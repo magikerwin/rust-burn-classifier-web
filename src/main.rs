@@ -171,8 +171,10 @@ async fn main() {
             // Choose a random class/sample index
             use std::time::{SystemTime, UNIX_EPOCH};
             let nanos = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
-            let random_idx = (nanos % 25) as usize; // Choose a random class index
+            let millis = (nanos / 1_000_000) as usize;
+            let random_idx = millis % 25; // Choose a random class index
             let sample = test_dataset.get(random_idx * 5).expect("Failed to get sample");
+
             let mut flattened_image = [0.0f32; 784];
             for i in 0..28 {
                 for j in 0..28 {
@@ -180,7 +182,10 @@ async fn main() {
                 }
             }
             let label = sample.label as usize;
-            (flattened_image, quickdraw::QUICKDRAW_CLASSES[label].to_string())
+            let class = quickdraw::QUICKDRAW_CLASSES[label].to_string();
+            println!("\nDEBUG: nanos = {}, random_idx = {}, selected class = {}", nanos, random_idx, class);
+            (flattened_image, class)
+
 
         } else {
             let test_dataset = MnistDataset::test();
