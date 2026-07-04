@@ -167,8 +167,12 @@ async fn main() {
 
         // Fetch a sample from the selected dataset
         let (flattened_image, class_name) = if dataset_arg == "quickdraw" {
-            let test_dataset = quickdraw::QuickDrawDataset::new(false, 1);
-            let sample = test_dataset.get(0).expect("Failed to get sample");
+            let test_dataset = quickdraw::QuickDrawDataset::new(false, 5); // load 5 per class
+            // Choose a random class/sample index
+            use std::time::{SystemTime, UNIX_EPOCH};
+            let nanos = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+            let random_idx = (nanos % 25) as usize; // Choose a random class index
+            let sample = test_dataset.get(random_idx * 5).expect("Failed to get sample");
             let mut flattened_image = [0.0f32; 784];
             for i in 0..28 {
                 for j in 0..28 {
@@ -177,6 +181,7 @@ async fn main() {
             }
             let label = sample.label as usize;
             (flattened_image, quickdraw::QUICKDRAW_CLASSES[label].to_string())
+
         } else {
             let test_dataset = MnistDataset::test();
             let sample = test_dataset.get(0).expect("Failed to get sample");
