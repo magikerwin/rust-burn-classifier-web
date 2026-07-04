@@ -9,8 +9,9 @@ use std::process::Command;
 /// This avoids committing large binary files to Git, while maintaining a smooth
 /// offline local development cycle and automated GitHub Actions builds.
 fn main() {
-    // Only rerun the build script if it actually changes
+    // Cache invalidation trigger: forces rebuild with correct weights
     println!("cargo:rerun-if-changed=build.rs");
+
 
     let out_dir = std::env::var("OUT_DIR").expect("OUT_DIR not set");
     let dest_mnist = Path::new(&out_dir).join("mnist-model.bin");
