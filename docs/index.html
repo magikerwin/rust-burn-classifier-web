@@ -371,16 +371,7 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
                 Clear Drawing
             </button>
-            <div style="display: flex; align-items: center; justify-content: center; margin-top: 14px; font-size: 0.85rem; color: var(--text-sub); gap: 6px;">
-                <input type="checkbox" id="debugBoxToggle" style="cursor: pointer; width: 14px; height: 14px; margin: 0;">
-                <label for="debugBoxToggle" style="cursor: pointer; user-select: none; font-weight: 500;">Show Bounding Box (Debug)</label>
-            </div>
-            <div id="debugErrorContainer" style="display: none; margin-top: 14px; padding: 12px; border-radius: 8px; background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); font-family: monospace; font-size: 0.8rem; color: #f87171; text-align: left; overflow-x: auto; max-width: 280px; word-wrap: break-word; line-height: 1.4;">
-                <strong>Debug Load Error:</strong>
-                <div id="debugErrorText" style="margin-top: 4px;"></div>
-            </div>
         </div>
-
 
 
         <!-- Real-Time Metrics & Outcomes -->
@@ -399,10 +390,48 @@
         </div>
     </div>
 
+    <!-- Collapsible Developer Console -->
+    <div class="card debug-panel" id="debugPanel" style="margin-top: 16px; display: none;">
+        <div style="font-weight: 600; font-size: 1rem; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span>Developer Console</span>
+            <span style="font-size: 0.75rem; color: var(--text-sub);" id="debugStatusLabel">Model Version: v1.1.0 (Shared)</span>
+        </div>
+        
+        <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+            <!-- Control Toggles -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; user-select: none; color: var(--text-main);">
+                    <input type="checkbox" id="showCropBoxCheck" checked style="cursor: pointer; width: 14px; height: 14px;">
+                    Show Auto-Bounding Box
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; user-select: none; color: var(--text-main);">
+                    <input type="checkbox" id="showPreviewCheck" checked style="cursor: pointer; width: 14px; height: 14px;">
+                    Show 28x28 Input Feed
+                </label>
+            </div>
+            
+            <!-- Live Preview Feed (WASM input preview) -->
+            <div id="previewContainer" style="display: flex; align-items: center; gap: 12px;">
+                <canvas id="previewCanvas" width="28" height="28" style="border: 1px solid var(--border-color); background: #000; border-radius: 4px; image-rendering: pixelated; width: 56px; height: 56px;"></canvas>
+                <div style="font-size: 0.75rem; color: var(--text-sub); line-height: 1.35;">
+                    <strong>Scaled Model Input</strong><br>
+                    Centered 28x28 Grayscale<br>
+                    (QuickDraw expects [0.0..1.0])
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live System Logs/Errors Terminal -->
+        <div id="systemLogsBox" style="margin-top: 12px; padding: 10px; border-radius: 6px; background: #08090d; border: 1px solid var(--border-color); font-family: monospace; font-size: 0.75rem; color: var(--text-sub); max-height: 120px; overflow-y: auto; text-align: left; white-space: pre-wrap; word-wrap: break-word;">
+            System status: Operational.
+        </div>
+    </div>
+
     <footer>
-        Powered by Rust & Burn Deep Learning Framework
+        Powered by Rust & Burn | <a href="#" id="toggleDebugLink" style="color: var(--accent-glow); text-decoration: none; font-weight: 600; margin-left: 4px;">Developer Console</a>
     </footer>
 </div>
+
 
 <script>
     const canvas = document.getElementById('drawingCanvas');
@@ -436,11 +465,36 @@
     let wasmModule = null;
     let predictor = null;
 
-    const debugBoxToggle = document.getElementById('debugBoxToggle');
-    const debugErrorContainer = document.getElementById('debugErrorContainer');
-    const debugErrorText = document.getElementById('debugErrorText');
+    // Developer Console Panel elements
+    const toggleDebugLink = document.getElementById('toggleDebugLink');
+    const debugPanel = document.getElementById('debugPanel');
+    const showCropBoxCheck = document.getElementById('showCropBoxCheck');
+    const showPreviewCheck = document.getElementById('showPreviewCheck');
+    const previewCanvas = document.getElementById('previewCanvas');
+    const previewCtx = previewCanvas.getContext('2d');
+    const systemLogsBox = document.getElementById('systemLogsBox');
+
     let debugBoxBackup = null;
     let wasmLoadError = null;
+
+    // Helper to write to debug console terminal
+    function logToSystem(message, isError = false) {
+        const time = new Date().toLocaleTimeString();
+        const color = isError ? '#f87171' : 'var(--text-sub)';
+        const boldStyle = isError ? 'font-weight: bold;' : '';
+        const line = `<div style="color: ${color}; ${boldStyle}">[${time}] ${message}</div>`;
+        systemLogsBox.innerHTML += line;
+        systemLogsBox.scrollTop = systemLogsBox.scrollHeight;
+    }
+
+    // Toggle Collapsible Developer Console Link
+    toggleDebugLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isOpen = debugPanel.style.display === 'block';
+        debugPanel.style.display = isOpen ? 'none' : 'block';
+        toggleDebugLink.innerText = isOpen ? 'Developer Console' : 'Close Developer Console';
+        logToSystem(`Developer Console ${isOpen ? 'hidden' : 'visible'}.`);
+    });
 
 
     // Drawing state
@@ -459,6 +513,7 @@
 
 
     // Initial page configurations loading
+    logToSystem('Connecting to Axum backend server...');
     fetch('/api/config')
         .then(res => {
             if (!res.ok) throw new Error('Not server mode');
@@ -468,6 +523,7 @@
             // Entered Server-Backed Mode
             runMode = 'server';
             appConfig = config;
+            logToSystem(`Server-Backed Mode initialized. Dataset: ${config.dataset}.`);
             initUI();
         })
         .catch(() => {
@@ -481,6 +537,7 @@
                 dataset: 'mnist',
                 classes: mnistClasses
             };
+            logToSystem('Backend server offline. Fallback to offline WebAssembly mode.');
             initUI();
             loadWasmPredictor();
         });
@@ -537,7 +594,7 @@
                     dataset: dataset,
                     classes: dataset === 'quickdraw' ? quickdrawClasses : mnistClasses
                 };
-                
+                logToSystem(`Switched dataset to ${dataset}. Reloading model...`);
                 initUI();
                 loadWasmPredictor();
             });
@@ -552,12 +609,14 @@
 
         try {
             if (!wasmModule) {
+                logToSystem('Loading WebAssembly engine assets...');
                 // Dynamically import WASM module with a cache-busting query parameter to force browser updates
                 wasmModule = await import(`./pkg/mnist_web.js?v=${Date.now()}`);
                 await wasmModule.default();
+                logToSystem('WebAssembly engine loaded successfully.');
             }
 
-
+            logToSystem(`Initializing predictor weights for ${appConfig.dataset}...`);
             if (appConfig.dataset === 'quickdraw') {
                 predictor = new wasmModule.QuickdrawPredictor();
             } else {
@@ -565,26 +624,23 @@
             }
 
             wasmLoadError = null;
-            updateDebugErrorVisibility();
+            logToSystem(`Predictor weights initialized successfully. Ready for inference.`);
             statusDot.className = 'predict-dot idle';
             statusText.innerText = 'Awaiting drawing...';
         } catch (err) {
             console.error('Failed to load WASM predictor:', err);
             wasmLoadError = err.message || err.toString();
-            updateDebugErrorVisibility();
+            logToSystem(`WASM initialization failed: ${wasmLoadError}`, true);
+            
+            // Auto open the developer console if it is closed so the user sees the error
+            debugPanel.style.display = 'block';
+            toggleDebugLink.innerText = 'Close Developer Console';
+
             statusText.innerText = 'WASM load failed!';
             statusDot.className = 'predict-dot idle';
         }
     }
 
-    function updateDebugErrorVisibility() {
-        if (debugBoxToggle && debugBoxToggle.checked && wasmLoadError) {
-            debugErrorText.innerText = wasmLoadError;
-            debugErrorContainer.style.display = 'block';
-        } else {
-            debugErrorContainer.style.display = 'none';
-        }
-    }
 
     // Clear Drawing Pad & bars
     function clearCanvas() {
@@ -593,6 +649,10 @@
         hasDrawn = false;
         debugBoxBackup = null;
         resetBars();
+        
+        // Clear debug preview canvas to black
+        previewCtx.fillStyle = '#000000';
+        previewCtx.fillRect(0, 0, 28, 28);
         
         if (runMode === 'wasm' && !predictor) {
             statusDot.className = 'predict-dot loading';
@@ -681,8 +741,8 @@
                 runOfflineInference();
             }
             
-            // If debug mode is checked, draw the bounding box visually on top
-            if (debugBoxToggle && debugBoxToggle.checked) {
+            // If crop box view is checked, draw the bounding box visually on top
+            if (showCropBoxCheck && showCropBoxCheck.checked) {
                 // Calculate bounding box parameters
                 const width = canvas.width;
                 const height = canvas.height;
@@ -735,6 +795,7 @@
             }
         }
     }
+
 
     // Extract canvas drawing pixels scaled down to 28x28 grayscale, centered and cropped
     function getScaledGrayscalePixels() {
@@ -810,7 +871,17 @@
 
         
         const imgData = oCtx.getImageData(0, 0, 28, 28);
+        
+        // Draw to the visible preview canvas if checked
+        if (showPreviewCheck && showPreviewCheck.checked) {
+            previewCtx.putImageData(imgData, 0, 0);
+        } else {
+            previewCtx.fillStyle = '#000000';
+            previewCtx.fillRect(0, 0, 28, 28);
+        }
+
         const finalData = imgData.data;
+
         const pixels = [];
         for (let i = 0; i < finalData.length; i += 4) {
             const r = finalData[i];
