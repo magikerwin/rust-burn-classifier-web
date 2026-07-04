@@ -32,7 +32,7 @@ fn main() {
         // CI/New Developer Fallback: download stable weights from GitHub Releases
         println!("cargo:warning=Local MNIST weights not found in target/, downloading from GitHub Releases...");
         download_file(
-            "https://github.com/magikerwin/burn-classifier-web/releases/download/v1.0.0/mnist-model.bin",
+            "https://github.com/magikerwin/rust-burn-classifier-web/releases/download/v1.0.0/mnist-model.bin",
             &dest_mnist,
         ).unwrap();
     }
@@ -49,7 +49,7 @@ fn main() {
         // CI/New Developer Fallback: download stable weights from GitHub Releases
         println!("cargo:warning=Local Quick Draw weights not found in target/, downloading from GitHub Releases...");
         download_file(
-            "https://github.com/magikerwin/burn-classifier-web/releases/download/v1.0.0/quickdraw-model.bin",
+            "https://github.com/magikerwin/rust-burn-classifier-web/releases/download/v1.0.0/quickdraw-model.bin",
             &dest_qd,
         ).unwrap();
     }
