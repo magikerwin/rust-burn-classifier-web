@@ -350,8 +350,14 @@
 
 <div class="container">
     <header>
+        <!-- GitHub Link Button -->
+        <a href="https://github.com/magikerwin/rust-burn-classifier-web" target="_blank" rel="noopener noreferrer" style="position: absolute; top: 0; right: 0; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: #151821; border: 1px solid var(--border-color); color: var(--text-sub); transition: all 0.2s ease; text-decoration: none;" onmouseover="this.style.borderColor='var(--accent-glow)'; this.style.color='var(--text-main)'; this.style.boxShadow='0 0 10px rgba(129,140,248,0.2)'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-sub)'; this.style.boxShadow='none'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+        </a>
+
         <h1 id="appTitle">Burn Digit Classifier</h1>
         <p id="appDesc">Draw a digit in the box below to run real-time inference</p>
+
         <div id="datasetSelector" class="selector-container" style="display: none;">
             <span class="selector-label">Model:</span>
             <div class="tabs">
