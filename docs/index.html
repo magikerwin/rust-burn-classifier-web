@@ -407,10 +407,7 @@
             <!-- Control Toggles -->
             <div style="display: flex; flex-direction: column; gap: 8px;">
                 <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; user-select: none; color: var(--text-main);">
-                    <input type="checkbox" id="showCropBoxCheck" checked style="cursor: pointer; width: 14px; height: 14px;">
-                    Show Auto-Bounding Box
-                </label>
-                <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; user-select: none; color: var(--text-main);">
+
                     <input type="checkbox" id="showPreviewCheck" checked style="cursor: pointer; width: 14px; height: 14px;">
                     Show 28x28 Input Feed
                 </label>
@@ -474,14 +471,13 @@
     // Developer Console Panel elements
     const toggleDebugLink = document.getElementById('toggleDebugLink');
     const debugPanel = document.getElementById('debugPanel');
-    const showCropBoxCheck = document.getElementById('showCropBoxCheck');
     const showPreviewCheck = document.getElementById('showPreviewCheck');
     const previewCanvas = document.getElementById('previewCanvas');
     const previewCtx = previewCanvas.getContext('2d');
     const systemLogsBox = document.getElementById('systemLogsBox');
 
-    let debugBoxBackup = null;
     let wasmLoadError = null;
+
 
     // Helper to write to debug console terminal
     function logToSystem(message, isError = false) {
@@ -705,12 +701,6 @@
     function startDrawing(e) {
         if (runMode === 'wasm' && !predictor) return; // Wait for WASM
         
-        // Restore clean canvas (without red debug box) if it exists
-        if (debugBoxBackup) {
-            ctx.putImageData(debugBoxBackup, 0, 0);
-            debugBoxBackup = null;
-        }
-        
         isDrawing = true;
         hasDrawn = true;
         wrapper.classList.add('drawing');
@@ -746,61 +736,9 @@
             } else if (predictor) {
                 runOfflineInference();
             }
-            
-            // If crop box view is checked, draw the bounding box visually on top
-            if (showCropBoxCheck && showCropBoxCheck.checked) {
-                // Calculate bounding box parameters
-                const width = canvas.width;
-                const height = canvas.height;
-                const imgData = ctx.getImageData(0, 0, width, height);
-                const data = imgData.data;
-                
-                let minX = width, maxX = 0, minY = height, maxY = 0;
-                let hasDrawing = false;
-                
-                for (let y = 0; y < height; y++) {
-                    for (let x = 0; x < width; x++) {
-                        const idx = (y * width + x) * 4;
-                        if (data[idx] > 10 || data[idx+1] > 10 || data[idx+2] > 10) {
-                            if (x < minX) minX = x;
-                            if (x > maxX) maxX = x;
-                            if (y < minY) minY = y;
-                            if (y > maxY) maxY = y;
-                            hasDrawing = true;
-                        }
-                    }
-                }
-                
-                if (hasDrawing) {
-                    // Backup the clean canvas state first
-                    debugBoxBackup = ctx.getImageData(0, 0, width, height);
-                    
-                    let boxWidth = maxX - minX + 1;
-                    let boxHeight = maxY - minY + 1;
-                    const size = Math.max(boxWidth, boxHeight);
-                    const padding = Math.round(size * 0.15);
-                    const paddedSize = size + padding * 2;
-                    const centerX = minX + boxWidth / 2;
-                    const centerY = minY + boxHeight / 2;
-                    
-                    const finalCropSize = Math.min(width, height, paddedSize);
-                    let cropX = Math.round(centerX - finalCropSize / 2);
-                    let cropY = Math.round(centerY - finalCropSize / 2);
-                    cropX = Math.max(0, Math.min(width - finalCropSize, cropX));
-                    cropY = Math.max(0, Math.min(height - finalCropSize, cropY));
-                    
-                    // Draw red dashed bounding box
-                    ctx.save();
-                    ctx.strokeStyle = '#ef4444'; // Tailwind red-500
-                    ctx.lineWidth = 2;
-                    ctx.setLineDash([6, 4]); // Dashed stroke
-                    ctx.strokeRect(cropX + 1, cropY + 1, finalCropSize - 2, finalCropSize - 2);
-                    ctx.restore();
-                }
-
-            }
         }
     }
+
 
 
     // Extract canvas drawing pixels scaled down to 28x28 grayscale, centered and cropped
@@ -1002,13 +940,8 @@
     window.addEventListener('touchend', stopDrawing);
 
     clearBtn.addEventListener('click', clearCanvas);
-    showCropBoxCheck.addEventListener('change', () => {
-        if (!showCropBoxCheck.checked && debugBoxBackup) {
-            ctx.putImageData(debugBoxBackup, 0, 0);
-            debugBoxBackup = null;
-        }
-    });
 </script>
+
 
 
 </body>
