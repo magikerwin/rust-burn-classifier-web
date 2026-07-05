@@ -27,7 +27,7 @@
 
 ## ✨ Features
 
-- **CNN Architecture** — Conv2d → MaxPool → Conv2d → MaxPool → FC → FC with dropout
+- **MobileNet-style CNN Architecture** — Depthwise Separable Convolutions, 1x1 projection and identity residual shortcuts, BatchNorm, GAP, and Dropout
 - **Interactive Web Demo** — Draw on a canvas and get real-time predictions
 - **WebAssembly Client-Side Inference** — Runs entirely in the browser via WASM, no backend required
 - **CLI Inference** — Predict with ASCII art visualization
@@ -40,11 +40,18 @@
 
 ```
 Input [1×28×28]
-  → Conv2d(1→16, 3×3, same) → LayerNorm → ReLU → MaxPool(2×2)  → [16×14×14]
-  → Conv2d(16→32, 3×3, same) → LayerNorm → ReLU → MaxPool(2×2) → [32×7×7]
-  → Flatten                                                     → [1568]
-  → Linear(1568→256) → ReLU → Dropout(0.35)
-  → Linear(256→num_classes) → Softmax
+  → Stem: Conv2d(1→24, 3×3, stride=1) → BatchNorm → ReLU                 → [24×28×28]
+  → Block 1: SeparableConv(24→48, stride=2) + Proj Shortcut(24→48)
+             → BatchNorm → ReLU                                          → [48×14×14]
+  → Block 2: SeparableConv(48→96, stride=2) + Proj Shortcut(48→96)
+             → BatchNorm → ReLU                                          → [96×7×7]
+  → Block 3: SeparableConv(96→96, stride=1) + Identity Shortcut
+             → BatchNorm → ReLU                                          → [96×7×7]
+  → Classifier:
+      → Global Average Pooling (GAP)                                     → [96×1×1]
+      → Flatten                                                          → [96]
+      → Dropout(0.5)
+      → Linear(96→num_classes)
 ```
 
 ---
