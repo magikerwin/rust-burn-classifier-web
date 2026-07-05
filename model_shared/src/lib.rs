@@ -1,7 +1,9 @@
 use burn::{
+    module::Module,
     nn::{
         conv::{Conv2d, Conv2dConfig},
-        LayerNorm, LayerNormConfig,
+        BatchNorm, BatchNormConfig,
+        Dropout, DropoutConfig,
         PaddingConfig2d,
         Linear, LinearConfig,
     },
@@ -11,111 +13,144 @@ use burn::{
 
 #[derive(Module, Debug)]
 pub struct Model<B: Backend> {
-    // Block 1: 28x28 -> 14x14, 1 -> 16 channels
+    // Stem Layer: Basic feature extraction (28x28, 1 -> 32 channels)
+    stem_conv: Conv2d<B>,
+    stem_bn: BatchNorm<B, 2>, // Note: 2 denotes 2D spatial dimensions (H, W)
+
+    // Block 1: 28x28 -> 14x14, 32 -> 64 channels
     conv1: Conv2d<B>,
-    ln1: LayerNorm<B>,
+    bn1: BatchNorm<B, 2>,
     proj1: Conv2d<B>,
+    proj1_bn: BatchNorm<B, 2>, // Projection also requires BatchNorm
 
-    // Block 2: 14x14 -> 7x7, 16 -> 32 channels
+    // Block 2: 14x14 -> 7x7, 64 -> 128 channels
     conv2: Conv2d<B>,
-    ln2: LayerNorm<B>,
+    bn2: BatchNorm<B, 2>,
     proj2: Conv2d<B>,
+    proj2_bn: BatchNorm<B, 2>,
 
-    // Block 3: Stays at 7x7, 32 -> 64 channels
+    // Block 3: Stays at 7x7, 128 -> 128 channels
     conv3: Conv2d<B>,
-    ln3: LayerNorm<B>,
+    bn3: BatchNorm<B, 2>,
     proj3: Conv2d<B>,
+    proj3_bn: BatchNorm<B, 2>,
 
-    // Classifier: GAP output (64 channels) -> logits
+    // Classifier (Includes Dropout to prevent overfitting)
+    dropout: Dropout,
     fc: Linear<B>,
 }
 
 impl<B: Backend> Model<B> {
     pub fn new(device: &B::Device, num_classes: usize) -> Self {
-        // Block 1
-        let conv1 = Conv2dConfig::new([1, 16], [3, 3])
-            .with_stride([2, 2])
+        // --- Stem Layer ---
+        let stem_conv = Conv2dConfig::new([1, 32], [3, 3])
+            .with_stride([1, 1]) // No downsampling, preserve details
             .with_padding(PaddingConfig2d::Explicit(1, 1))
             .init(device);
-        let ln1 = LayerNormConfig::new(16).init(device);
-        let proj1 = Conv2dConfig::new([1, 16], [1, 1])
-            .with_stride([2, 2])
-            .init(device);
+        let stem_bn = BatchNormConfig::new(32).init(device);
 
-        // Block 2
-        let conv2 = Conv2dConfig::new([16, 32], [3, 3])
-            .with_stride([2, 2])
+        // --- Block 1 ---
+        let conv1 = Conv2dConfig::new([32, 64], [3, 3])
+            .with_stride([2, 2]) // Downsampling
             .with_padding(PaddingConfig2d::Explicit(1, 1))
             .init(device);
-        let ln2 = LayerNormConfig::new(32).init(device);
-        let proj2 = Conv2dConfig::new([16, 32], [1, 1])
+        let bn1 = BatchNormConfig::new(64).init(device);
+        let proj1 = Conv2dConfig::new([32, 64], [1, 1])
             .with_stride([2, 2])
             .init(device);
+        let proj1_bn = BatchNormConfig::new(64).init(device);
 
-        // Block 3 (No downsampling, stride 1)
-        let conv3 = Conv2dConfig::new([32, 64], [3, 3])
+        // --- Block 2 ---
+        let conv2 = Conv2dConfig::new([64, 128], [3, 3])
+            .with_stride([2, 2]) // Downsampling
+            .with_padding(PaddingConfig2d::Explicit(1, 1))
+            .init(device);
+        let bn2 = BatchNormConfig::new(128).init(device);
+        let proj2 = Conv2dConfig::new([64, 128], [1, 1])
+            .with_stride([2, 2])
+            .init(device);
+        let proj2_bn = BatchNormConfig::new(128).init(device);
+
+        // --- Block 3 ---
+        let conv3 = Conv2dConfig::new([128, 128], [3, 3])
+            .with_stride([1, 1]) // No downsampling
+            .with_padding(PaddingConfig2d::Explicit(1, 1))
+            .init(device);
+        let bn3 = BatchNormConfig::new(128).init(device);
+        let proj3 = Conv2dConfig::new([128, 128], [1, 1])
             .with_stride([1, 1])
-            .with_padding(PaddingConfig2d::Explicit(1, 1))
             .init(device);
-        let ln3 = LayerNormConfig::new(64).init(device);
-        let proj3 = Conv2dConfig::new([32, 64], [1, 1])
-            .with_stride([1, 1])
-            .init(device);
+        let proj3_bn = BatchNormConfig::new(128).init(device);
 
-        // Classifier: Single Linear layer mapping GAP features to class logits
-        let fc = LinearConfig::new(64, num_classes).init(device);
+        // --- Classifier ---
+        let dropout = DropoutConfig::new(0.5).init(); // 50% random dropout
+        let fc = LinearConfig::new(128, num_classes).init(device);
 
         Self {
+            stem_conv,
+            stem_bn,
             conv1,
-            ln1,
+            bn1,
             proj1,
+            proj1_bn,
             conv2,
-            ln2,
+            bn2,
             proj2,
+            proj2_bn,
             conv3,
-            ln3,
+            bn3,
             proj3,
+            proj3_bn,
+            dropout,
             fc,
         }
     }
 
     pub fn forward(&self, input: Tensor<B, 4>) -> Tensor<B, 2> {
-        // Block 1: Conv (stride 2) + Proj (stride 2)
-        let y = self.conv1.forward(input.clone());
-        let y = y.swap_dims(1, 3);
-        let y = self.ln1.forward(y);
-        let y = y.swap_dims(1, 3);
+        // --- Stem ---
+        let x = self.stem_conv.forward(input);
+        let x = self.stem_bn.forward(x);
+        let x = relu(x);
+
+        // --- Block 1 ---
+        let y = self.conv1.forward(x.clone());
+        let y = self.bn1.forward(y);
+        let y = relu(y); // Step 1: non-linearity in main branch
         
-        let shortcut = self.proj1.forward(input);
+        let shortcut = self.proj1.forward(x);
+        let shortcut = self.proj1_bn.forward(shortcut); // Step 2: Shortcut also uses BatchNorm
         let x = relu(y + shortcut);
 
-        // Block 2: Conv (stride 2) + Proj (stride 2)
+        // --- Block 2 ---
         let y = self.conv2.forward(x.clone());
-        let y = y.swap_dims(1, 3);
-        let y = self.ln2.forward(y);
-        let y = y.swap_dims(1, 3);
-
+        let y = self.bn2.forward(y);
+        let y = relu(y);
+        
         let shortcut = self.proj2.forward(x);
+        let shortcut = self.proj2_bn.forward(shortcut);
         let x = relu(y + shortcut);
 
-        // Block 3: Conv (stride 1) + Proj (stride 1)
+        // --- Block 3 ---
         let y = self.conv3.forward(x.clone());
-        let y = y.swap_dims(1, 3);
-        let y = self.ln3.forward(y);
-        let y = y.swap_dims(1, 3);
-
+        let y = self.bn3.forward(y);
+        let y = relu(y);
+        
         let shortcut = self.proj3.forward(x);
+        let shortcut = self.proj3_bn.forward(shortcut);
         let x = relu(y + shortcut);
 
-        // Global Average Pooling: [Batch, 64, 7, 7] -> [Batch, 64, 1, 1]
+        // --- Global Average Pooling ---
+        // [Batch, 128, 7, 7] -> [Batch, 128, 1, 1]
         let x = x.mean_dim(2).mean_dim(3);
 
-        // Reshape: [Batch, 64, 1, 1] -> [Batch, 64]
+        // Flatten (Reshape)
+        // [Batch, 128, 1, 1] -> [Batch, 128]
         let shape = x.shape();
         let batch_size = shape.dims[0];
-        let x = x.reshape([batch_size, 64]);
+        let x = x.reshape([batch_size, 128]);
 
-        // Classifier projection directly to logits
+        // --- Dropout & Classifier ---
+        let x = self.dropout.forward(x); // Apply dropout for regularization
         self.fc.forward(x)
     }
 }
