@@ -841,6 +841,7 @@
     // POST pixels to Backend server
     function sendImageToServer() {
         const pixels = getScaledGrayscalePixels();
+        const startTime = performance.now();
 
         fetch('/predict', {
             method: 'POST',
@@ -851,10 +852,12 @@
         })
         .then(res => res.json())
         .then(result => {
+            const duration = (performance.now() - startTime).toFixed(1);
             updateProbabilities(result.probabilities);
             const label = appConfig.classes[result.prediction] || result.prediction;
             statusText.innerText = `Prediction: ${label}`;
             statusDot.className = 'predict-dot';
+            logToSystem(`Server prediction latency: ${duration} ms`);
         })
         .catch(err => {
             console.error('Server inference error:', err);
@@ -867,9 +870,11 @@
     function runOfflineInference() {
         if (!predictor) return;
         const pixels = getScaledGrayscalePixels();
+        const startTime = performance.now();
 
         try {
             const probabilities = predictor.predict(pixels);
+            const duration = (performance.now() - startTime).toFixed(1);
             updateProbabilities(probabilities);
 
             // Find class index with max probability
@@ -885,6 +890,7 @@
             const label = appConfig.classes[maxIndex] || maxIndex;
             statusText.innerText = `Prediction: ${label}`;
             statusDot.className = 'predict-dot';
+            logToSystem(`WASM prediction latency: ${duration} ms`);
         } catch (err) {
             console.error('WASM prediction error:', err);
             statusText.innerText = 'Prediction failed!';
