@@ -506,7 +506,7 @@
     // Configure Canvas Context
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 28;
+    // ctx.lineWidth is configured dynamically in initUI() based on active dataset
     ctx.strokeStyle = '#ffffff';
 
     // Clear canvas to black
@@ -547,8 +547,9 @@
     function initUI() {
         const isQuickdraw = appConfig.dataset === 'quickdraw';
         
-        // Dynamic stroke width adjustment: MNIST needs thick lines (28px), QuickDraw needs thin lines (14px)
-        ctx.lineWidth = isQuickdraw ? 14 : 28;
+        // Dynamically scale stroke width relative to canvas width to maintain aspect ratio on different resolutions
+        const strokeFactor = isQuickdraw ? 0.05 : 0.10;
+        ctx.lineWidth = canvas.width * strokeFactor;
         
         // Update Title & Heading labels
         const modeLabel = runMode === 'wasm' ? ' (WASM)' : '';
