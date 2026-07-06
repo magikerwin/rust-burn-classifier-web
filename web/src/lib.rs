@@ -8,6 +8,13 @@ use burn::{
 };
 use model_shared::Model;
 
+const MODEL_VERSION: &str = include_str!("../weights-version.txt");
+
+#[wasm_bindgen]
+pub fn get_compiled_model_version() -> String {
+    MODEL_VERSION.trim().to_string()
+}
+
 
 
 #[wasm_bindgen]

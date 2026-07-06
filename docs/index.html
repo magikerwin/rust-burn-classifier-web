@@ -509,20 +509,49 @@
 
         let wasmLoadError = null;
 
+        let expectedVersion = null;
+
         async function syncModelVersionLabel() {
             try {
                 const response = await fetch('./weights-version.txt', { cache: 'no-store' });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-                const version = (await response.text()).trim();
-                if (version) {
-                    debugStatusLabel.textContent = `Model Version: ${version} (Shared)`;
-                } else {
-                    debugStatusLabel.textContent = 'Model Version: unavailable';
-                }
+                expectedVersion = (await response.text()).trim();
+                updateVersionLabel();
             } catch (err) {
                 console.warn('Failed to load model version label:', err);
-                debugStatusLabel.textContent = 'Model Version: unavailable';
+                expectedVersion = null;
+                updateVersionLabel();
+            }
+        }
+
+        function updateVersionLabel() {
+            const expectedStr = expectedVersion ? expectedVersion : 'unknown';
+            const serverVersion = (appConfig && appConfig.version) ? appConfig.version : 'unknown';
+            const compiledVersion = (appConfig && appConfig.compiled_version) ? appConfig.compiled_version : 'unknown';
+            
+            if (runMode === 'server') {
+                if (expectedVersion && compiledVersion && expectedVersion !== compiledVersion) {
+                    debugStatusLabel.innerHTML = `Model Version: <span style="color: #eab308; font-weight: bold;">${serverVersion} (Server)</span> <span style="color: #f87171; font-weight: bold;">⚠️ Mismatch (Expected ${expectedStr})</span>`;
+                } else {
+                    debugStatusLabel.textContent = `Model Version: ${serverVersion} (Server)`;
+                }
+            } else if (runMode === 'wasm') {
+                if (!predictor) {
+                    debugStatusLabel.textContent = `Model Version: loading... (Expected: ${expectedStr})`;
+                    return;
+                }
+                
+                try {
+                    const loadedWasmVersion = wasmModule.get_compiled_model_version();
+                    if (expectedVersion && loadedWasmVersion && expectedVersion !== loadedWasmVersion) {
+                        debugStatusLabel.innerHTML = `Model Version: <span style="color: #eab308; font-weight: bold;">${loadedWasmVersion} (WASM)</span> <span style="color: #f87171; font-weight: bold;">⚠️ Mismatch (Expected ${expectedStr})</span>`;
+                    } else {
+                        debugStatusLabel.textContent = `Model Version: ${loadedWasmVersion} (WASM)`;
+                    }
+                } catch (err) {
+                    debugStatusLabel.textContent = `Model Version: error reading WASM version (Expected: ${expectedStr})`;
+                }
             }
         }
 
@@ -577,6 +606,7 @@
                 appConfig = config;
                 logToSystem(`Server-Backed Mode initialized. Dataset: ${config.dataset}.`);
                 initUI();
+                updateVersionLabel();
             })
             .catch(() => {
                 // Failed to fetch backend config: Entered Offline WASM Mode
@@ -591,6 +621,7 @@
                 };
                 logToSystem('Backend server offline. Fallback to offline WebAssembly mode.');
                 initUI();
+                updateVersionLabel();
                 loadWasmPredictor();
             });
 
@@ -668,7 +699,7 @@
                     logToSystem('Loading WebAssembly engine assets...');
                     // Dynamically import WASM module with a cache-busting query parameter to force browser updates
                     wasmModule = await import(`./pkg/mnist_web.js?v=${Date.now()}`);
-                    await wasmModule.default();
+                    await wasmModule.default(`./pkg/mnist_web_bg.wasm?v=${Date.now()}`);
                     logToSystem('WebAssembly engine loaded successfully.');
                 }
 
@@ -683,6 +714,7 @@
                 logToSystem(`Predictor weights initialized successfully. Ready for inference.`);
                 statusDot.className = 'predict-dot idle';
                 statusText.innerText = 'Awaiting drawing...';
+                updateVersionLabel();
             } catch (err) {
                 console.error('Failed to load WASM predictor:', err);
                 wasmLoadError = err.message || err.toString();

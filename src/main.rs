@@ -26,6 +26,8 @@ use serde::{Deserialize, Serialize};
 struct AppConfig {
     dataset: String,
     classes: Vec<String>,
+    version: String,
+    compiled_version: String,
 }
 
 /// Shared state across the web server requests
@@ -140,9 +142,22 @@ async fn main() {
         } else {
             (0..10).map(|i| i.to_string()).collect()
         };
+        
+        let version = std::fs::read_to_string("docs/weights-version.txt")
+            .unwrap_or_else(|_| "unknown".to_string())
+            .trim()
+            .to_string();
+
+        let compiled_version = std::fs::read_to_string("web/weights-version.txt")
+            .unwrap_or_else(|_| "unknown".to_string())
+            .trim()
+            .to_string();
+
         let config = AppConfig {
             dataset: dataset_arg.to_string(),
             classes,
+            version: version.clone(),
+            compiled_version,
         };
         let state = AppState { model, device, config };
 
