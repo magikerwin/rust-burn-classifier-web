@@ -264,9 +264,13 @@ Make sure you have trained the models first, then:
    wasm-pack build web --target web --out-dir ../docs/pkg
    ```
 
-3. **Serve locally**:
+3. **Install a local static file server** (needed for the preview):
    ```sh
    cargo install basic-http-server
+   ```
+
+4. **Serve locally**:
+   ```sh
    basic-http-server docs
    ```
    Navigate to **[http://localhost:4000](http://localhost:4000)**.
