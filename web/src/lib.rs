@@ -26,18 +26,17 @@ pub struct MnistPredictor {
 #[wasm_bindgen]
 impl MnistPredictor {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
+    pub fn new(model_bytes: &[u8]) -> Result<MnistPredictor, JsValue> {
         console_error_panic_hook::set_once();
         let device = Default::default();
         
-        let bytes = include_bytes!(concat!(env!("OUT_DIR"), "/mnist-model.bin"));
         let recorder = BinBytesRecorder::<FullPrecisionSettings>::default();
-        let record = recorder.load(bytes.to_vec(), &device)
-            .expect("Failed to load embedded model weights");
+        let record = recorder.load(model_bytes.to_vec(), &device)
+            .map_err(|e| JsValue::from_str(&format!("Failed to load MNIST model weights: {:?}", e)))?;
             
         let model = Model::<NdArray>::new(&device, 10).load_record(record);
         
-        Self { model, device }
+        Ok(Self { model, device })
     }
     
     pub fn predict(&self, raw_image: &[f32]) -> Result<Vec<f32>, JsValue> {
@@ -54,18 +53,17 @@ pub struct QuickdrawPredictor {
 #[wasm_bindgen]
 impl QuickdrawPredictor {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
+    pub fn new(model_bytes: &[u8]) -> Result<QuickdrawPredictor, JsValue> {
         console_error_panic_hook::set_once();
         let device = Default::default();
         
-        let bytes = include_bytes!(concat!(env!("OUT_DIR"), "/quickdraw-model.bin"));
         let recorder = BinBytesRecorder::<FullPrecisionSettings>::default();
-        let record = recorder.load(bytes.to_vec(), &device)
-            .expect("Failed to load embedded model weights");
+        let record = recorder.load(model_bytes.to_vec(), &device)
+            .map_err(|e| JsValue::from_str(&format!("Failed to load Quickdraw model weights: {:?}", e)))?;
             
         let model = Model::<NdArray>::new(&device, 25).load_record(record);
         
-        Self { model, device }
+        Ok(Self { model, device })
     }
     
     pub fn predict(&self, raw_image: &[f32]) -> Result<Vec<f32>, JsValue> {
@@ -127,7 +125,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_mnist_predictor_creation_and_predict() {
-        let predictor = MnistPredictor::new();
+        let bytes = include_bytes!("../../target/mnist-model/model.bin");
+        let predictor = MnistPredictor::new(bytes).unwrap();
         let dummy_image = [0.0f32; 784];
         let probs = predictor.predict(&dummy_image).unwrap();
         assert_eq!(probs.len(), 10);
@@ -137,7 +136,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_quickdraw_predictor_creation_and_predict() {
-        let predictor = QuickdrawPredictor::new();
+        let bytes = include_bytes!("../../target/quickdraw-model/model.bin");
+        let predictor = QuickdrawPredictor::new(bytes).unwrap();
         let dummy_image = [0.0f32; 784];
         let probs = predictor.predict(&dummy_image).unwrap();
         assert_eq!(probs.len(), 25);

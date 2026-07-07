@@ -30,9 +30,11 @@ Write-Host "Ensuring GitHub Release '$Version' exists..." -ForegroundColor Cyan
 # Try creating the release. If it already exists, gh CLI will report a warning but continue safely
 gh release create $Version --title "$Version" --notes "Pre-trained model weights for offline WebAssembly inference ($Version)" 2>$null
 
-Write-Host "Preparing model binaries for upload..." -ForegroundColor Cyan
+Write-Host "Preparing model binaries for upload and local dev..." -ForegroundColor Cyan
 Copy-Item $mnistWeights "mnist-model.bin"
 Copy-Item $qdWeights "quickdraw-model.bin"
+Copy-Item $mnistWeights (Join-Path $PSScriptRoot "docs/mnist-model.bin") -Force
+Copy-Item $qdWeights (Join-Path $PSScriptRoot "docs/quickdraw-model.bin") -Force
 
 Write-Host "Uploading model weights to GitHub Release $Version (overwriting previous assets)..." -ForegroundColor Cyan
 gh release upload $Version "mnist-model.bin" "quickdraw-model.bin" --clobber

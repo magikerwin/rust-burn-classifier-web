@@ -703,11 +703,35 @@
                     logToSystem('WebAssembly engine loaded successfully.');
                 }
 
-                logToSystem(`Initializing predictor weights for ${appConfig.dataset}...`);
-                if (appConfig.dataset === 'quickdraw') {
-                    predictor = new wasmModule.QuickdrawPredictor();
+                const dataset = appConfig.dataset;
+                logToSystem(`Fetching model weights for ${dataset}...`);
+                
+                let weightsBytes = null;
+                const version = expectedVersion || 'v1.2.0';
+                const releaseUrl = `https://github.com/magikerwin/rust-burn-classifier-web/releases/download/${version}/${dataset}-model.bin`;
+                const localUrl = `./${dataset}-model.bin?v=${Date.now()}`;
+                
+                try {
+                    // 1. Try to fetch from GitHub Releases (CDN)
+                    logToSystem(`Attempting fetch from GitHub Releases (${version})...`);
+                    const response = await fetch(releaseUrl);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    weightsBytes = new Uint8Array(await response.arrayBuffer());
+                    logToSystem(`Model weights downloaded from GitHub Release successfully.`);
+                } catch (e) {
+                    // 2. Fall back to local fetch (offline or local dev)
+                    logToSystem(`GitHub fetch failed: ${e.message}. Falling back to local weights...`);
+                    const response = await fetch(localUrl);
+                    if (!response.ok) throw new Error(`Failed to load local weights: HTTP ${response.status}`);
+                    weightsBytes = new Uint8Array(await response.arrayBuffer());
+                    logToSystem(`Local model weights loaded successfully.`);
+                }
+
+                logToSystem(`Initializing predictor weights for ${dataset}...`);
+                if (dataset === 'quickdraw') {
+                    predictor = new wasmModule.QuickdrawPredictor(weightsBytes);
                 } else {
-                    predictor = new wasmModule.MnistPredictor();
+                    predictor = new wasmModule.MnistPredictor(weightsBytes);
                 }
 
                 wasmLoadError = null;
