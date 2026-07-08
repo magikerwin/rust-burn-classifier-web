@@ -175,7 +175,7 @@
             overflow: hidden;
             border: 2px solid var(--border-color);
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            width: 280px;
+            width: 100%;
             aspect-ratio: 16 / 10;
             background-color: #000000;
             box-shadow: 0 0 0 transparent;
@@ -290,10 +290,11 @@
         /* Hero Prediction Box */
         .hero-prediction {
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 16px;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 12px;
             background: rgba(255, 255, 255, 0.015);
             border: 1px dashed var(--border-color);
             border-radius: 16px;
@@ -302,7 +303,7 @@
         }
 
         .hero-label {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 800;
             text-transform: capitalize;
             background: linear-gradient(135deg, #ffffff 0%, var(--accent-glow) 100%);
@@ -316,7 +317,6 @@
             font-size: 1.1rem;
             font-weight: 600;
             color: var(--text-sub);
-            margin-top: 2px;
         }
 
         /* Probabilities List (Top 5 Only, no scrollbar needed) */
@@ -499,7 +499,6 @@
                 border-radius: 12px;
             }
             .canvas-wrapper {
-                width: 240px;
                 aspect-ratio: 16 / 10;
                 border-radius: 10px;
             }
@@ -509,8 +508,7 @@
                 border-radius: 8px;
             }
             .hero-prediction {
-                flex-direction: row;
-                gap: 12px;
+                gap: 10px;
                 padding: 6px 12px;
                 border-radius: 10px;
                 margin-bottom: 0px;
@@ -520,7 +518,6 @@
             }
             .hero-conf {
                 font-size: 0.95rem;
-                margin-top: 0;
             }
             .prob-row {
                 gap: 8px;
@@ -598,7 +595,7 @@
                 <!-- Hero Prediction Display -->
                 <div class="hero-prediction">
                     <div class="hero-label" id="heroLabel">Awaiting Drawing</div>
-                    <div class="hero-conf" id="heroConf">--</div>
+                    <div class="hero-conf" id="heroConf" style="display: none;">--</div>
                 </div>
 
                 <!-- Top 5 probabilities list -->
@@ -825,9 +822,9 @@
         function initUI() {
             const isQuickdraw = appConfig.dataset === 'quickdraw';
 
-            // Dynamically scale stroke width relative to canvas width to maintain aspect ratio on different resolutions
-            const strokeFactor = isQuickdraw ? 0.05 : 0.10;
-            ctx.lineWidth = canvas.width * strokeFactor;
+            // Dynamically scale stroke width relative to canvas height
+            const strokeFactor = isQuickdraw ? 0.05 : 0.09;
+            ctx.lineWidth = canvas.height * strokeFactor;
 
             // Update Title & Heading labels
             const modeLabel = runMode === 'wasm' ? ' (WASM)' : '';
@@ -942,7 +939,7 @@
 
             // Reset prediction display
             document.getElementById('heroLabel').innerText = "Awaiting Drawing";
-            document.getElementById('heroConf').innerText = "--";
+            document.getElementById('heroConf').style.display = "none";
             probsList.innerHTML = '';
 
             // Reset badges
@@ -1136,8 +1133,8 @@
                 .then(res => res.json())
                 .then(result => {
                     const duration = (performance.now() - startTime).toFixed(1);
-                    updateProbabilities(result.probabilities);
-                    statusText.innerText = `Latency: ${duration}ms (Online)`;
+                    updateProbabilities(result.probabilities, duration);
+                    statusText.innerText = `Latency: ${duration}ms`;
                     statusDot.className = 'predict-dot';
                     logToSystem(`Server prediction latency: ${duration} ms`);
                 })
@@ -1157,8 +1154,8 @@
             try {
                 const probabilities = predictor.predict(pixels);
                 const duration = (performance.now() - startTime).toFixed(1);
-                updateProbabilities(probabilities);
-                statusText.innerText = `Latency: ${duration}ms (WASM)`;
+                updateProbabilities(probabilities, duration);
+                statusText.innerText = `Latency: ${duration}ms`;
                 statusDot.className = 'predict-dot';
                 logToSystem(`WASM prediction latency: ${duration} ms`);
             } catch (err) {
@@ -1168,8 +1165,8 @@
             }
         }
 
-        // Update dynamic progress bars & highlights (top 5 and badges)
-        function updateProbabilities(probabilities) {
+        // Update dynamic progress bars & highlights (top 3 and badges)
+        function updateProbabilities(probabilities, duration) {
             if (!appConfig || !appConfig.classes) return;
 
             // Map, sort, and extract top predictions
@@ -1185,10 +1182,11 @@
             const heroConf = document.getElementById('heroConf');
             if (isAwaiting) {
                 heroLabel.innerText = "Awaiting Drawing";
-                heroConf.innerText = "--";
+                heroConf.style.display = "none";
             } else {
                 heroLabel.innerText = top.name;
                 heroConf.innerText = `${(top.prob * 100).toFixed(1)}%`;
+                heroConf.style.display = "inline-block";
             }
 
             // 2. Render Top 3 rows
