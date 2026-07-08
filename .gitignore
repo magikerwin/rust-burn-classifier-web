@@ -1,3 +1,8 @@
 /target
 /docs/pkg/
 /docs/*-model.bin
+
+# Avoid committing local/accidental WASM builds
+/docs/pk/
+/web/pkg/
+/web/docs/

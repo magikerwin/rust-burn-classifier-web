@@ -260,9 +260,19 @@ Make sure you have trained the models first, then:
    ```
 
 2. **Build the WebAssembly module**:
-   ```sh
-   wasm-pack build web --target web --out-dir ../docs/pkg
-   ```
+   * **On Windows (Recommended)**:
+     ```powershell
+     powershell -ExecutionPolicy Bypass -File ./build-web.ps1
+     ```
+   * **On macOS/Linux (Recommended)**:
+     ```sh
+     chmod +x ./build-web.sh
+     ./build-web.sh
+     ```
+   * **Or run the command manually** (does not automatically clean up duplicate/redundant folders):
+     ```sh
+     wasm-pack build web --target web --out-dir ../docs/pkg
+     ```
 
 3. **Install a local static file server** (needed for the preview):
    ```sh
