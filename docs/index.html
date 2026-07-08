@@ -176,7 +176,7 @@
             border: 2px solid var(--border-color);
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
             width: 280px;
-            height: 280px;
+            aspect-ratio: 16 / 10;
             background-color: #000000;
             box-shadow: 0 0 0 transparent;
         }
@@ -186,10 +186,34 @@
             box-shadow: 0 0 20px var(--accent-glow-subtle);
         }
 
+        /* Floating Canvas Status Badge */
+        .status-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(21, 24, 33, 0.75);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: var(--text-sub);
+            pointer-events: none;
+            user-select: none;
+            z-index: 5;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+
         canvas {
             display: block;
             cursor: crosshair;
             touch-action: none;
+            width: 100%;
+            height: 100%;
         }
 
         .btn {
@@ -263,33 +287,43 @@
             box-shadow: 0 0 8px #eab308;
         }
 
-        /* Probabilities List */
+        /* Hero Prediction Box */
+        .hero-prediction {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px dashed var(--border-color);
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .hero-label {
+            font-size: 2.2rem;
+            font-weight: 800;
+            text-transform: capitalize;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent-glow) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .hero-conf {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-top: 2px;
+        }
+
+        /* Probabilities List (Top 5 Only, no scrollbar needed) */
         .probs-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            max-height: 480px;
-            overflow-y: auto;
-            padding-right: 8px;
-        }
-
-        /* Custom scrollbar for probabilities list */
-        .probs-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .probs-list::-webkit-scrollbar-track {
-            background: #151821;
-            border-radius: 3px;
-        }
-
-        .probs-list::-webkit-scrollbar-thumb {
-            background: #2a2e3d;
-            border-radius: 3px;
-        }
-
-        .probs-list::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-glow);
         }
 
         .prob-row {
@@ -299,9 +333,9 @@
         }
 
         .digit-label {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            width: 110px;
+            width: 100px;
             text-align: left;
             text-transform: capitalize;
             color: var(--text-sub);
@@ -317,9 +351,9 @@
 
         .progress-bar-bg {
             flex-grow: 1;
-            height: 12px;
+            height: 10px;
             background-color: #1a1e2a;
-            border-radius: 6px;
+            border-radius: 5px;
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.03);
         }
@@ -328,7 +362,7 @@
             height: 100%;
             width: 0%;
             background-color: var(--bar-color);
-            border-radius: 6px;
+            border-radius: 5px;
             transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
         }
 
@@ -350,11 +384,162 @@
             color: var(--text-main);
         }
 
+        /* Category Badges Grid Section (Collapsible details) */
+        details.categories-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        summary.categories-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            user-select: none;
+            list-style: none; /* Hide default arrow */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        summary.categories-title::-webkit-details-marker {
+            display: none; /* Hide default arrow in Chrome/Safari */
+        }
+
+        summary.categories-title::after {
+            content: '▾';
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            transition: transform 0.2s ease;
+        }
+
+        details[open] summary.categories-title::after {
+            content: '▴';
+        }
+
+        .categories-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            animation: slideDown 0.25s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .category-badge {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-sub);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: capitalize;
+            transition: all 0.25s ease;
+            cursor: default;
+            user-select: none;
+        }
+
+        .category-badge.active {
+            color: #ffffff;
+            background-color: var(--accent-glow);
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+            transform: scale(1.03);
+        }
+
+        .category-badge.top5 {
+            color: var(--text-main);
+            border-color: rgba(99, 102, 241, 0.35);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
         footer {
-            margin-top: 30px;
+            margin-top: 24px;
             text-align: center;
             font-size: 0.8rem;
             color: #4b5563;
+        }
+
+        /* Mobile Viewport Optimization to fit on a single screen without scrolling */
+        @media (max-width: 767px) {
+            body {
+                padding: 8px;
+                justify-content: flex-start;
+                min-height: auto;
+            }
+            .container {
+                gap: 8px;
+            }
+            header h1 {
+                font-size: 1.5rem;
+                margin-bottom: 2px;
+            }
+            header p {
+                display: none; /* Hide subtitle to save major vertical space */
+            }
+            .selector-container {
+                padding: 4px 10px;
+                margin-top: 2px;
+            }
+            .app-grid {
+                gap: 8px; /* Collapse gap between canvas card and analysis card */
+            }
+            .card {
+                padding: 10px;
+                gap: 8px;
+                border-radius: 12px;
+            }
+            .canvas-wrapper {
+                width: 240px;
+                aspect-ratio: 16 / 10;
+                border-radius: 10px;
+            }
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.8rem;
+                border-radius: 8px;
+            }
+            .hero-prediction {
+                flex-direction: row;
+                gap: 12px;
+                padding: 6px 12px;
+                border-radius: 10px;
+                margin-bottom: 0px;
+            }
+            .hero-label {
+                font-size: 1.4rem;
+            }
+            .hero-conf {
+                font-size: 0.95rem;
+                margin-top: 0;
+            }
+            .prob-row {
+                gap: 8px;
+            }
+            .digit-label {
+                font-size: 0.8rem;
+                width: 75px;
+            }
+            .value-label {
+                font-size: 0.75rem;
+                width: 35px;
+            }
+            .progress-bar-bg {
+                height: 6px;
+            }
+            footer {
+                margin-top: 12px;
+                font-size: 0.75rem;
+            }
         }
     </style>
 </head>
@@ -375,7 +560,7 @@
                 </svg>
             </a>
 
-            <h1 id="appTitle">Burn Digit Classifier</h1>
+            <h1 id="appTitle">Digit Classifier</h1>
             <p id="appDesc">Draw a digit in the box below to run real-time inference</p>
 
             <div id="datasetSelector" class="selector-container" style="display: none;">
@@ -391,7 +576,11 @@
             <!-- Interactive Drawing Pad -->
             <div class="card">
                 <div class="canvas-wrapper" id="canvasWrapper">
-                    <canvas id="drawingCanvas" width="280" height="280"></canvas>
+                    <canvas id="drawingCanvas" width="320" height="200"></canvas>
+                    <div class="status-badge">
+                        <span class="predict-dot idle" id="statusDot"></span>
+                        <span id="statusText">Ready</span>
+                    </div>
                 </div>
                 <button class="btn" id="clearBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -405,17 +594,25 @@
 
             <!-- Real-Time Metrics & Outcomes -->
             <div class="card results-card">
-                <div class="results-header">
-                    <div class="results-title">Probabilities</div>
-                    <div class="predict-indicator">
-                        <span class="predict-dot idle" id="statusDot"></span>
-                        <span id="statusText">Awaiting drawing...</span>
-                    </div>
+
+                <!-- Hero Prediction Display -->
+                <div class="hero-prediction">
+                    <div class="hero-label" id="heroLabel">Awaiting Drawing</div>
+                    <div class="hero-conf" id="heroConf">--</div>
                 </div>
 
+                <!-- Top 5 probabilities list -->
                 <div class="probs-list" id="probsList">
-                    <!-- List rows will be dynamically injected -->
+                    <!-- Dynamic Top 5 rows go here -->
                 </div>
+
+                <!-- Supported classes list (Collapsible details) -->
+                <details class="categories-section">
+                    <summary class="categories-title">Supported Categories</summary>
+                    <div class="categories-grid" id="categoriesGrid">
+                        <!-- Pill-shaped badges go here -->
+                    </div>
+                </details>
             </div>
         </div>
 
@@ -635,31 +832,23 @@
             // Update Title & Heading labels
             const modeLabel = runMode === 'wasm' ? ' (WASM)' : '';
             document.title = isQuickdraw
-                ? `Burn Quick, Draw! Doodle Classifier${modeLabel}`
-                : `Burn MNIST Digit Classifier${modeLabel}`;
+                ? `Quick, Draw! Doodle Classifier${modeLabel}`
+                : `MNIST Digit Classifier${modeLabel}`;
 
             document.getElementById('appTitle').innerText = isQuickdraw
-                ? `Burn Quick, Draw! Doodle Classifier${modeLabel}`
-                : `Burn MNIST Digit Classifier${modeLabel}`;
+                ? `Quick, Draw! Doodle Classifier${modeLabel}`
+                : `MNIST Digit Classifier${modeLabel}`;
 
             document.getElementById('appDesc').innerText = isQuickdraw
                 ? 'Draw one of the 25 doodle categories in the box below to run real-time inference'
                 : 'Draw a digit in the box below to run real-time inference';
 
-            // Dynamically populate probability list rows
-            let rowsHTML = '';
+            // Populate all class badges once
+            let badgesHTML = '';
             appConfig.classes.forEach((className, i) => {
-                rowsHTML += `
-                <div class="prob-row" id="row-${i}">
-                    <div class="digit-label" id="label-${i}">${className}</div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" id="bar-${i}"></div>
-                    </div>
-                    <div class="value-label" id="val-${i}">0.0%</div>
-                </div>
-            `;
+                badgesHTML += `<div class="category-badge" id="badge-${i}">${className}</div>`;
             });
-            probsList.innerHTML = rowsHTML;
+            document.getElementById('categoriesGrid').innerHTML = badgesHTML;
 
             // Reset canvas & results
             clearCanvas();
@@ -728,7 +917,7 @@
                 wasmLoadError = null;
                 logToSystem(`Predictor weights initialized successfully. Ready for inference.`);
                 statusDot.className = 'predict-dot idle';
-                statusText.innerText = 'Awaiting drawing...';
+                statusText.innerText = 'Ready';
                 updateVersionLabel();
             } catch (err) {
                 console.error('Failed to load WASM predictor:', err);
@@ -745,13 +934,22 @@
         }
 
 
-        // Clear Drawing Pad & bars
+        // Clear Drawing Pad & reset results
         function clearCanvas() {
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             hasDrawn = false;
-            debugBoxBackup = null;
-            resetBars();
+
+            // Reset prediction display
+            document.getElementById('heroLabel').innerText = "Awaiting Drawing";
+            document.getElementById('heroConf').innerText = "--";
+            probsList.innerHTML = '';
+
+            // Reset badges
+            appConfig.classes.forEach((_, i) => {
+                const badge = document.getElementById(`badge-${i}`);
+                if (badge) badge.className = 'category-badge';
+            });
 
             // Clear debug preview canvas to black
             previewCtx.fillStyle = '#000000';
@@ -762,26 +960,10 @@
                 statusText.innerText = 'Loading WASM model...';
             } else {
                 statusDot.className = 'predict-dot idle';
-                statusText.innerText = 'Awaiting drawing...';
+                statusText.innerText = 'Ready';
             }
         }
 
-        function resetBars() {
-            if (!appConfig || !appConfig.classes) return;
-            for (let i = 0; i < appConfig.classes.length; i++) {
-                const bar = document.getElementById(`bar-${i}`);
-                const val = document.getElementById(`val-${i}`);
-                const row = document.getElementById(`row-${i}`);
-                const label = document.getElementById(`label-${i}`);
-                if (bar && val && row && label) {
-                    bar.style.width = '0%';
-                    val.innerText = '0.0%';
-                    row.classList.remove('active');
-                    label.classList.remove('active');
-                    val.classList.remove('active');
-                }
-            }
-        }
 
         // Coordinate scaling to resolve responsive scaling issues on retina/mobile
         function getCoordinates(e) {
@@ -819,7 +1001,7 @@
             // Real-time analysis triggers
             if (runMode === 'wasm' && predictor) {
                 statusDot.className = 'predict-dot';
-                statusText.innerText = 'Analyzing (WASM)...';
+                statusText.innerText = 'Analyzing...';
                 runOfflineInference();
             }
         }
@@ -832,7 +1014,7 @@
             if (hasDrawn) {
                 if (runMode === 'server') {
                     statusDot.className = 'predict-dot';
-                    statusText.innerText = 'Analyzing (Server)...';
+                    statusText.innerText = 'Analyzing...';
                     sendImageToServer();
                 } else if (predictor) {
                     runOfflineInference();
@@ -955,14 +1137,13 @@
                 .then(result => {
                     const duration = (performance.now() - startTime).toFixed(1);
                     updateProbabilities(result.probabilities);
-                    const label = appConfig.classes[result.prediction] || result.prediction;
-                    statusText.innerText = `Prediction: ${label}`;
+                    statusText.innerText = `Latency: ${duration}ms (Online)`;
                     statusDot.className = 'predict-dot';
                     logToSystem(`Server prediction latency: ${duration} ms`);
                 })
                 .catch(err => {
                     console.error('Server inference error:', err);
-                    statusText.innerText = 'Prediction failed!';
+                    statusText.innerText = 'Failed';
                     statusDot.className = 'predict-dot idle';
                 });
         }
@@ -977,64 +1158,72 @@
                 const probabilities = predictor.predict(pixels);
                 const duration = (performance.now() - startTime).toFixed(1);
                 updateProbabilities(probabilities);
-
-                // Find class index with max probability
-                let maxIndex = 0;
-                let maxVal = -1;
-                for (let i = 0; i < appConfig.classes.length; i++) {
-                    if (probabilities[i] > maxVal) {
-                        maxVal = probabilities[i];
-                        maxIndex = i;
-                    }
-                }
-
-                const label = appConfig.classes[maxIndex] || maxIndex;
-                statusText.innerText = `Prediction: ${label}`;
+                statusText.innerText = `Latency: ${duration}ms (WASM)`;
                 statusDot.className = 'predict-dot';
                 logToSystem(`WASM prediction latency: ${duration} ms`);
             } catch (err) {
                 console.error('WASM prediction error:', err);
-                statusText.innerText = 'Prediction failed!';
+                statusText.innerText = 'Failed';
                 statusDot.className = 'predict-dot idle';
             }
         }
 
-        // Update dynamic progress bars & highlights
+        // Update dynamic progress bars & highlights (top 5 and badges)
         function updateProbabilities(probabilities) {
             if (!appConfig || !appConfig.classes) return;
-            const numClasses = appConfig.classes.length;
 
-            let maxIndex = 0;
-            let maxVal = -1;
-            for (let i = 0; i < numClasses; i++) {
-                if (probabilities[i] > maxVal) {
-                    maxVal = probabilities[i];
-                    maxIndex = i;
-                }
+            // Map, sort, and extract top predictions
+            const sorted = appConfig.classes
+                .map((name, i) => ({ name, i, prob: probabilities[i] }))
+                .sort((a, b) => b.prob - a.prob);
+
+            const top = sorted[0];
+            const isAwaiting = top.prob < 0.01;
+
+            // 1. Update Hero Area
+            const heroLabel = document.getElementById('heroLabel');
+            const heroConf = document.getElementById('heroConf');
+            if (isAwaiting) {
+                heroLabel.innerText = "Awaiting Drawing";
+                heroConf.innerText = "--";
+            } else {
+                heroLabel.innerText = top.name;
+                heroConf.innerText = `${(top.prob * 100).toFixed(1)}%`;
             }
 
-            for (let i = 0; i < numClasses; i++) {
-                const percentage = (probabilities[i] * 100).toFixed(1);
-                const bar = document.getElementById(`bar-${i}`);
-                const val = document.getElementById(`val-${i}`);
-                const row = document.getElementById(`row-${i}`);
-                const label = document.getElementById(`label-${i}`);
+            // 2. Render Top 3 rows
+            let rowsHTML = '';
+            const numToShow = Math.min(3, sorted.length);
+            for (let r = 0; r < numToShow; r++) {
+                const item = sorted[r];
+                const pct = (item.prob * 100).toFixed(1);
+                const activeClass = (r === 0 && !isAwaiting) ? 'active' : '';
+                rowsHTML += `
+                    <div class="prob-row ${activeClass}">
+                        <div class="digit-label">${item.name}</div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${pct}%"></div>
+                        </div>
+                        <div class="value-label">${pct}%</div>
+                    </div>
+                `;
+            }
+            probsList.innerHTML = rowsHTML;
 
-                if (bar && val && row && label) {
-                    bar.style.width = `${percentage}%`;
-                    val.innerText = `${percentage}%`;
+            // 3. Update All Categories Badges
+            appConfig.classes.forEach((_, i) => {
+                const badge = document.getElementById(`badge-${i}`);
+                if (!badge) return;
 
-                    if (i === maxIndex) {
-                        row.classList.add('active');
-                        label.classList.add('active');
-                        val.classList.add('active');
-                    } else {
-                        row.classList.remove('active');
-                        label.classList.remove('active');
-                        val.classList.remove('active');
+                badge.className = 'category-badge';
+                if (!isAwaiting) {
+                    if (i === top.i) {
+                        badge.classList.add('active');
+                    } else if (sorted.slice(1, 3).some(item => item.i === i)) {
+                        badge.classList.add('top5');
                     }
                 }
-            }
+            });
         }
 
         // Event Listeners (Mouse + Touch)
