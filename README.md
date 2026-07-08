@@ -1,6 +1,6 @@
-# 🔢 MNIST & Quick, Draw! Classifier — Burn (Rust)
+# 🔢 MNIST, EMNIST & Quick, Draw! Classifier — Burn (Rust)
 
-> An interactive handwritten digit and doodle classifier built with the [Burn](https://burn.dev/) deep learning framework in Rust. Train a CNN model, run inference from the CLI, or draw in the browser!
+> An interactive handwritten digit, letter, and doodle classifier built with the [Burn](https://burn.dev/) deep learning framework in Rust. Train a CNN model, run inference from the CLI, or draw in the browser!
 >
 > 🚀 **[Try the Live WebAssembly Demo!](https://magikerwin.github.io/rust-drawing-classifier-web/)**
 
@@ -101,6 +101,16 @@ To train on your GPU (`Wgpu` backend):
 cargo run --release -- --gpu
 ```
 
+To train on the **EMNIST Letters** dataset (26 classes, downloads dynamically):
+
+```sh
+# CPU
+cargo run --release -- --dataset emnist
+
+# GPU
+cargo run --release -- --dataset emnist --gpu
+```
+
 To train on the Google **Quick, Draw!** dataset (25 classes, downloads dynamically):
 
 ```sh
@@ -111,7 +121,7 @@ cargo run --release -- --dataset quickdraw
 cargo run --release -- --dataset quickdraw --gpu
 ```
 
-> **Dataset Cache:** Quick, Draw! `.npy` files are downloaded once and cached at `target/quickdraw_dataset/`. If you change `TRAIN_SAMPLES_PER_CLASS` or `VAL_SAMPLES_PER_CLASS` in `src/quickdraw.rs`, delete the cache first so it re-downloads with the new sample count:
+> **Dataset Cache:** Dataset files are downloaded once and cached at `target/emnist_dataset/` and `target/quickdraw_dataset/`. If you change the configurations, delete the caches first so they re-download:
 > ```sh
 > rm -rf target/quickdraw_dataset   # Linux / macOS
 > Remove-Item -Recurse -Force target\quickdraw_dataset  # Windows PowerShell
@@ -127,7 +137,8 @@ After 5 epochs of training:
 | Dataset | Validation Accuracy | Validation Loss |
 |---|---|---|
 | **MNIST** (10 classes) | `~98%+` | `~0.05` |
-| **Quick, Draw!** (25 classes) | `~95%+` | `~0.15` |
+| **EMNIST Letters** (26 classes) | `~84%+` | `~0.49` |
+| **Quick, Draw!** (25 classes) | `~86%+` | `~0.51` |
 
 
 <details>
@@ -153,6 +164,12 @@ Once trained, predict from the MNIST test set:
 
 ```sh
 cargo run --release -- --predict
+```
+
+Predict from the EMNIST Letters test set:
+
+```sh
+cargo run --release -- --predict --dataset emnist
 ```
 
 Predict from the Quick, Draw! test set:
@@ -194,6 +211,52 @@ Top Predictions:
   1. 7            : 99.42%
   2. 9            : 0.35%
   3. 2            : 0.11%
+```
+
+</details>
+
+<details>
+<summary>📝 Example Output (EMNIST Letters)</summary>
+
+```text
+Loading model for inference (dataset: emnist)...
+Loading and parsing EMNIST Letters test data...
+
+Input Image:
+
+
+
+
+
+
+           ...
+         .#####
+      ..######.
+     ..#######.
+    .########....
+   .######...####.
+   .#####...#####.
+   ###############
+  .###############
+   .##############.
+   .###############.
+    ..####..   .####..
+      ....     .######..
+       ..       ...####..
+                   ......
+
+
+
+
+
+
+
+
+Target Label (Ground Truth): A
+Top Predictions:
+  1. A            : 88.57%
+  2. R            : 3.80%
+  3. D            : 1.84%
 ```
 
 </details>

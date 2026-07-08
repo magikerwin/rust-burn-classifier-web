@@ -3,6 +3,7 @@ mod data;
 mod training;
 mod inference;
 mod quickdraw;
+mod emnist;
 
 
 use burn::{
@@ -126,8 +127,21 @@ async fn main() {
         .map(|s| s.as_str())
         .unwrap_or("mnist");
 
-    let num_classes = if dataset_arg == "quickdraw" { quickdraw::QUICKDRAW_CLASSES.len() } else { 10 };
-    let artifact_dir = if dataset_arg == "quickdraw" { "./target/quickdraw-model" } else { "./target/mnist-model" };
+    let num_classes = if dataset_arg == "quickdraw" {
+        quickdraw::QUICKDRAW_CLASSES.len()
+    } else if dataset_arg == "emnist" {
+        emnist::EMNIST_CLASSES.len()
+    } else {
+        10
+    };
+
+    let artifact_dir = if dataset_arg == "quickdraw" {
+        "./target/quickdraw-model"
+    } else if dataset_arg == "emnist" {
+        "./target/emnist-model"
+    } else {
+        "./target/mnist-model"
+    };
 
     if run_server {
         // ==========================================
@@ -139,6 +153,8 @@ async fn main() {
         
         let classes = if dataset_arg == "quickdraw" {
             quickdraw::QUICKDRAW_CLASSES.iter().map(|&s| s.to_string()).collect()
+        } else if dataset_arg == "emnist" {
+            emnist::EMNIST_CLASSES.iter().map(|&s| s.to_string()).collect()
         } else {
             (0..10).map(|i| i.to_string()).collect()
         };
@@ -208,8 +224,18 @@ async fn main() {
             let class = quickdraw::QUICKDRAW_CLASSES[label].to_string();
             println!("\nDEBUG: nanos = {}, random_idx = {}, selected class = {}", nanos, random_idx, class);
             (flattened_image, class)
-
-
+        } else if dataset_arg == "emnist" {
+            let test_dataset = emnist::EmnistDataset::new(false);
+            let sample = test_dataset.get(0).expect("Failed to get sample");
+            let mut flattened_image = [0.0f32; 784];
+            for i in 0..28 {
+                for j in 0..28 {
+                    flattened_image[i * 28 + j] = sample.image[i][j];
+                }
+            }
+            let label = sample.label as usize;
+            let class = emnist::EMNIST_CLASSES[label].to_string();
+            (flattened_image, class)
         } else {
             let test_dataset = MnistDataset::test();
             let sample = test_dataset.get(0).expect("Failed to get sample");
@@ -252,6 +278,8 @@ async fn main() {
         for (i, (idx, prob)) in prob_indices.iter().take(3).enumerate() {
             let name = if dataset_arg == "quickdraw" {
                 quickdraw::QUICKDRAW_CLASSES[*idx].to_string()
+            } else if dataset_arg == "emnist" {
+                emnist::EMNIST_CLASSES[*idx].to_string()
             } else {
                 idx.to_string()
             };
@@ -289,6 +317,49 @@ async fn main() {
                     num_classes,
                 );
             }
+        } else if dataset_arg == "emnist" {
+            use burn::data::dataset::InMemDataset;
+
+            println!("Loading EMNIST Letters dataset into memory...");
+            let emnist_train = emnist::EmnistDataset::new(true);
+            let mut train_items = Vec::with_capacity(emnist_train.len());
+            for i in 0..emnist_train.len() {
+                if let Some(item) = emnist_train.get(i) {
+                    train_items.push(item);
+                }
+            }
+            let train_dataset = InMemDataset::new(train_items);
+
+            let emnist_test = emnist::EmnistDataset::new(false);
+            let mut valid_items = Vec::with_capacity(emnist_test.len());
+            for i in 0..emnist_test.len() {
+                if let Some(item) = emnist_test.get(i) {
+                    valid_items.push(item);
+                }
+            }
+            let valid_dataset = InMemDataset::new(valid_items);
+
+            if run_gpu {
+                println!("Starting EMNIST Letters training on GPU (WGPU backend)...");
+                train::<Autodiff<burn::backend::Wgpu>, _, _>(
+                    artifact_dir,
+                    config,
+                    burn::backend::wgpu::WgpuDevice::default(),
+                    train_dataset,
+                    valid_dataset,
+                    num_classes,
+                );
+            } else {
+                println!("Starting EMNIST Letters training on CPU (NdArray backend)...");
+                train::<Autodiff<NdArray>, _, _>(
+                    artifact_dir,
+                    config,
+                    Default::default(),
+                    train_dataset,
+                    valid_dataset,
+                    num_classes,
+                );
+            }
         } else {
             use burn::data::dataset::InMemDataset;
             
@@ -312,9 +383,6 @@ async fn main() {
                 }
             }
             let valid_dataset = InMemDataset::new(valid_items);
-
-
-
 
             if run_gpu {
                 println!("Starting MNIST training on GPU (WGPU backend)...");

@@ -4238,6 +4238,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "burn",
+ "flate2",
  "model_shared",
  "rand 0.8.6",
  "reqwest",

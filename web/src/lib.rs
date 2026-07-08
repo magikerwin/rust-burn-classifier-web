@@ -71,6 +71,33 @@ impl QuickdrawPredictor {
     }
 }
 
+#[wasm_bindgen]
+pub struct EmnistPredictor {
+    model: Model<NdArray>,
+    device: <NdArray as Backend>::Device,
+}
+
+#[wasm_bindgen]
+impl EmnistPredictor {
+    #[wasm_bindgen(constructor)]
+    pub fn new(model_bytes: &[u8]) -> Result<EmnistPredictor, JsValue> {
+        console_error_panic_hook::set_once();
+        let device = Default::default();
+        
+        let recorder = BinBytesRecorder::<FullPrecisionSettings>::default();
+        let record = recorder.load(model_bytes.to_vec(), &device)
+            .map_err(|e| JsValue::from_str(&format!("Failed to load EMNIST model weights: {:?}", e)))?;
+            
+        let model = Model::<NdArray>::new(&device, 26).load_record(record);
+        
+        Ok(Self { model, device })
+    }
+    
+    pub fn predict(&self, raw_image: &[f32]) -> Result<Vec<f32>, JsValue> {
+        predict_internal(&self.model, &self.device, raw_image, false) // EMNIST expects [0, 255] (just like MNIST)
+    }
+}
+
 fn predict_internal(
     model: &Model<NdArray>,
     device: &<NdArray as Backend>::Device,

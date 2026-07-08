@@ -573,6 +573,7 @@
                 <span class="selector-label">Model:</span>
                 <div class="tabs">
                     <button class="tab-btn active" id="tabMnist" data-dataset="mnist">MNIST</button>
+                    <button class="tab-btn" id="tabEmnist" data-dataset="emnist">Letters</button>
                     <button class="tab-btn" id="tabQuickdraw" data-dataset="quickdraw">Quick Draw</button>
                 </div>
             </div>
@@ -700,10 +701,15 @@
 
         const datasetSelector = document.getElementById('datasetSelector');
         const tabMnist = document.getElementById('tabMnist');
+        const tabEmnist = document.getElementById('tabEmnist');
         const tabQuickdraw = document.getElementById('tabQuickdraw');
 
         // Offline client-side class categories configurations
         const mnistClasses = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        const emnistClasses = [
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+            'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+        ];
         const quickdrawClasses = [
             "triangle", "circle", "square", "sun", "moon", "star", "tree", "flower",
             "cat", "dog", "fish", "butterfly", "cup", "key", "umbrella", "hat",
@@ -850,6 +856,7 @@
 
         function initUI() {
             const isQuickdraw = appConfig.dataset === 'quickdraw';
+            const isEmnist = appConfig.dataset === 'emnist';
 
             // Dynamically scale stroke width relative to canvas height
             const strokeFactor = isQuickdraw ? 0.05 : 0.09;
@@ -859,15 +866,17 @@
             const modeLabel = runMode === 'wasm' ? ' (WASM)' : '';
             document.title = isQuickdraw
                 ? `Quick Draw Doodle Classifier${modeLabel}`
-                : `MNIST Digit Classifier${modeLabel}`;
+                : (isEmnist ? `EMNIST Letters Classifier${modeLabel}` : `MNIST Digit Classifier${modeLabel}`);
 
             document.getElementById('appTitle').innerText = isQuickdraw
                 ? `Quick Draw Doodle Classifier${modeLabel}`
-                : `MNIST Digit Classifier${modeLabel}`;
+                : (isEmnist ? `EMNIST Letters Classifier${modeLabel}` : `MNIST Digit Classifier${modeLabel}`);
 
             document.getElementById('appDesc').innerText = isQuickdraw
                 ? 'Draw one of the 25 doodle categories in the box below to run real-time inference'
-                : 'Draw a digit in the box below to run real-time inference';
+                : (isEmnist
+                    ? 'Draw a capital letter (A–Z) in the box below to run real-time inference'
+                    : 'Draw a digit in the box below to run real-time inference');
 
             // Populate all class badges once
             let badgesHTML = '';
@@ -882,19 +891,23 @@
 
         // Set up tabs for WASM Mode dataset selection
         function setupWasmTabs() {
-            [tabMnist, tabQuickdraw].forEach(tab => {
+            [tabMnist, tabEmnist, tabQuickdraw].forEach(tab => {
+                if (!tab) return;
                 tab.addEventListener('click', (e) => {
                     const dataset = e.currentTarget.getAttribute('data-dataset');
                     if (appConfig.dataset === dataset) return;
 
                     // Toggle active tab style
                     tabMnist.classList.toggle('active', dataset === 'mnist');
+                    tabEmnist.classList.toggle('active', dataset === 'emnist');
                     tabQuickdraw.classList.toggle('active', dataset === 'quickdraw');
 
                     // Update configuration
                     appConfig = {
                         dataset: dataset,
-                        classes: dataset === 'quickdraw' ? quickdrawClasses : mnistClasses
+                        classes: dataset === 'quickdraw'
+                            ? quickdrawClasses
+                            : (dataset === 'emnist' ? emnistClasses : mnistClasses)
                     };
                     logToSystem(`Switched dataset to ${dataset}. Reloading model...`);
                     initUI();
@@ -936,6 +949,8 @@
                 logToSystem(`Initializing predictor weights for ${dataset}...`);
                 if (dataset === 'quickdraw') {
                     predictor = new wasmModule.QuickdrawPredictor(weightsBytes);
+                } else if (dataset === 'emnist') {
+                    predictor = new wasmModule.EmnistPredictor(weightsBytes);
                 } else {
                     predictor = new wasmModule.MnistPredictor(weightsBytes);
                 }
