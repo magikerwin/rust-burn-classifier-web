@@ -293,13 +293,15 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            height: 72px;
             padding: 12px;
             background: rgba(255, 255, 255, 0.015);
             border: 1px dashed var(--border-color);
             border-radius: 16px;
             text-align: center;
             margin-bottom: 4px;
+            overflow: hidden;
         }
 
         .hero-label {
@@ -319,11 +321,16 @@
             color: var(--text-sub);
         }
 
-        /* Probabilities List (Top 5 Only, no scrollbar needed) */
+        /* Probabilities List (Top 3 Only, no scrollbar needed) */
         .probs-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
+            transition: opacity 0.25s ease;
+        }
+
+        .probs-list.awaiting {
+            opacity: 0.25;
         }
 
         .prob-row {
@@ -512,6 +519,8 @@
                 padding: 6px 12px;
                 border-radius: 10px;
                 margin-bottom: 0px;
+                height: 52px;
+                flex-wrap: nowrap;
             }
             .hero-label {
                 font-size: 1.4rem;
@@ -595,12 +604,32 @@
                 <!-- Hero Prediction Display -->
                 <div class="hero-prediction">
                     <div class="hero-label" id="heroLabel">Awaiting Drawing</div>
-                    <div class="hero-conf" id="heroConf" style="display: none;">--</div>
+                    <div class="hero-conf" id="heroConf" style="visibility: hidden;">00.0%</div>
                 </div>
 
-                <!-- Top 5 probabilities list -->
-                <div class="probs-list" id="probsList">
-                    <!-- Dynamic Top 5 rows go here -->
+                <!-- Top 3 probabilities list -->
+                <div class="probs-list awaiting" id="probsList">
+                    <div class="prob-row" id="probRow-0">
+                        <div class="digit-label" id="probLabel-0">—</div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="probFill-0" style="width: 0%"></div>
+                        </div>
+                        <div class="value-label" id="probValue-0">0.0%</div>
+                    </div>
+                    <div class="prob-row" id="probRow-1">
+                        <div class="digit-label" id="probLabel-1">—</div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="probFill-1" style="width: 0%"></div>
+                        </div>
+                        <div class="value-label" id="probValue-1">0.0%</div>
+                    </div>
+                    <div class="prob-row" id="probRow-2">
+                        <div class="digit-label" id="probLabel-2">—</div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="probFill-2" style="width: 0%"></div>
+                        </div>
+                        <div class="value-label" id="probValue-2">0.0%</div>
+                    </div>
                 </div>
 
                 <!-- Supported classes list (Collapsible details) -->
@@ -939,8 +968,28 @@
 
             // Reset prediction display
             document.getElementById('heroLabel').innerText = "Awaiting Drawing";
-            document.getElementById('heroConf').style.display = "none";
-            probsList.innerHTML = '';
+            const heroConf = document.getElementById('heroConf');
+            heroConf.style.visibility = "hidden";
+            heroConf.innerText = "00.0%";
+
+            const probsList = document.getElementById('probsList');
+            probsList.classList.add('awaiting');
+
+            for (let r = 0; r < 3; r++) {
+                const rowEl = document.getElementById(`probRow-${r}`);
+                const labelEl = document.getElementById(`probLabel-${r}`);
+                const fillEl = document.getElementById(`probFill-${r}`);
+                const valueEl = document.getElementById(`probValue-${r}`);
+
+                if (rowEl && labelEl && fillEl && valueEl) {
+                    labelEl.innerText = "—";
+                    fillEl.style.width = "0%";
+                    valueEl.innerText = "0.0%";
+                    rowEl.className = 'prob-row';
+                    labelEl.className = 'digit-label';
+                    valueEl.className = 'value-label';
+                }
+            }
 
             // Reset badges
             appConfig.classes.forEach((_, i) => {
@@ -1182,31 +1231,58 @@
             const heroConf = document.getElementById('heroConf');
             if (isAwaiting) {
                 heroLabel.innerText = "Awaiting Drawing";
-                heroConf.style.display = "none";
+                heroConf.style.visibility = "hidden";
+                heroConf.innerText = "00.0%";
             } else {
                 heroLabel.innerText = top.name;
                 heroConf.innerText = `${(top.prob * 100).toFixed(1)}%`;
-                heroConf.style.display = "inline-block";
+                heroConf.style.visibility = "visible";
             }
 
-            // 2. Render Top 3 rows
-            let rowsHTML = '';
-            const numToShow = Math.min(3, sorted.length);
-            for (let r = 0; r < numToShow; r++) {
-                const item = sorted[r];
-                const pct = (item.prob * 100).toFixed(1);
-                const activeClass = (r === 0 && !isAwaiting) ? 'active' : '';
-                rowsHTML += `
-                    <div class="prob-row ${activeClass}">
-                        <div class="digit-label">${item.name}</div>
-                        <div class="progress-bar-bg">
-                            <div class="progress-bar-fill" style="width: ${pct}%"></div>
-                        </div>
-                        <div class="value-label">${pct}%</div>
-                    </div>
-                `;
+            // 2. Update Top 3 rows in-place
+            const probsList = document.getElementById('probsList');
+            if (isAwaiting) {
+                probsList.classList.add('awaiting');
+            } else {
+                probsList.classList.remove('awaiting');
             }
-            probsList.innerHTML = rowsHTML;
+
+            const numToShow = Math.min(3, sorted.length);
+            for (let r = 0; r < 3; r++) {
+                const rowEl = document.getElementById(`probRow-${r}`);
+                const labelEl = document.getElementById(`probLabel-${r}`);
+                const fillEl = document.getElementById(`probFill-${r}`);
+                const valueEl = document.getElementById(`probValue-${r}`);
+
+                if (!rowEl || !labelEl || !fillEl || !valueEl) continue;
+
+                if (r < numToShow) {
+                    const item = sorted[r];
+                    const pct = (item.prob * 100).toFixed(1);
+
+                    labelEl.innerText = item.name;
+                    fillEl.style.width = `${pct}%`;
+                    valueEl.innerText = `${pct}%`;
+
+                    // Handle active highlight classes
+                    if (r === 0 && !isAwaiting) {
+                        rowEl.className = 'prob-row active';
+                        labelEl.className = 'digit-label active';
+                        valueEl.className = 'value-label active';
+                    } else {
+                        rowEl.className = 'prob-row';
+                        labelEl.className = 'digit-label';
+                        valueEl.className = 'value-label';
+                    }
+                } else {
+                    labelEl.innerText = "—";
+                    fillEl.style.width = "0%";
+                    valueEl.innerText = "0.0%";
+                    rowEl.className = 'prob-row';
+                    labelEl.className = 'digit-label';
+                    valueEl.className = 'value-label';
+                }
+            }
 
             // 3. Update All Categories Badges
             appConfig.classes.forEach((_, i) => {
