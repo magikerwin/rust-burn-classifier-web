@@ -260,14 +260,9 @@ Make sure you have trained the models first, then:
    ```
 
 2. **Build the WebAssembly module**:
-   * **On Windows (Recommended)**:
-     ```powershell
-     powershell -ExecutionPolicy Bypass -File ./build-web.ps1
-     ```
-   * **On macOS/Linux (Recommended)**:
+   * **Using the helper binary (Recommended, cross-platform)**:
      ```sh
-     chmod +x ./build-web.sh
-     ./build-web.sh
+     cargo run --bin build_web
      ```
    * **Or run the command manually** (does not automatically clean up duplicate/redundant folders):
      ```sh
@@ -296,12 +291,12 @@ To update the model weights used by the CI runner:
    - **Authenticate**: `gh auth login` → GitHub.com → HTTPS → browser
 
 2. Upload your local weights to a GitHub Release:
-   ```powershell
+   ```sh
    # Default v1.0.0
-   powershell -ExecutionPolicy Bypass -File ./publish-weights.ps1
+   cargo run --bin publish_weights
 
    # Custom version tag
-   powershell -ExecutionPolicy Bypass -File ./publish-weights.ps1 -Version v2.0.0
+   cargo run --bin publish_weights -- v2.0.0
    ```
 
    The script now updates [web/weights-version.txt](web/weights-version.txt) and [docs/weights-version.txt](docs/weights-version.txt) automatically, so you no longer need to edit those files by hand.
