@@ -564,7 +564,7 @@
                 <span class="selector-label">Model:</span>
                 <div class="tabs">
                     <button class="tab-btn active" id="tabMnist" data-dataset="mnist">MNIST Digits</button>
-                    <button class="tab-btn" id="tabQuickdraw" data-dataset="quickdraw">Quick Draw</button>
+                    <button class="tab-btn" id="tabQuickdraw" data-dataset="quickdraw">Quick Draw Doodles</button>
                 </div>
             </div>
         </header>
@@ -829,11 +829,11 @@
             // Update Title & Heading labels
             const modeLabel = runMode === 'wasm' ? ' (WASM)' : '';
             document.title = isQuickdraw
-                ? `Quick, Draw! Doodle Classifier${modeLabel}`
+                ? `Quick Draw Doodle Classifier${modeLabel}`
                 : `MNIST Digit Classifier${modeLabel}`;
 
             document.getElementById('appTitle').innerText = isQuickdraw
-                ? `Quick, Draw! Doodle Classifier${modeLabel}`
+                ? `Quick Draw Doodle Classifier${modeLabel}`
                 : `MNIST Digit Classifier${modeLabel}`;
 
             document.getElementById('appDesc').innerText = isQuickdraw
