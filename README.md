@@ -420,11 +420,11 @@ Rather than training on all 345 categories (39 GB of raw data), we train on a cu
 - [Burn — Deep Learning Framework for Rust](https://burn.dev/)
 - [The Burn Book](https://burn.dev/book/)
 - [tracel-ai/burn MNIST example](https://github.com/tracel-ai/burn/blob/main/examples/mnist/examples/mnist.rs)
-- [Google Quick, Draw! Dataset](https://github.com/googlecreativelab/quickdraw-dataset)
-- [EMNIST Dataset (NIST Special Database 19)](https://www.nist.gov/itl/iad/image-group/emnist-dataset)
-- [EMNIST Paper: Cohen et al., "EMNIST: Extending MNIST to handwritten letters"](https://arxiv.org/abs/1702.05373)
 - [wasm-pack — Rust WebAssembly Packager](https://rustwasm.github.io/wasm-pack/)
 - [Yann LeCun's MNIST Database](https://yann.lecun.com/exdb/mnist/)
+- [EMNIST Dataset (NIST Special Database 19)](https://www.nist.gov/itl/iad/image-group/emnist-dataset)
+- [EMNIST Paper: Cohen et al., "EMNIST: Extending MNIST to handwritten letters"](https://arxiv.org/abs/1702.05373)
+- [Google Quick, Draw! Dataset](https://github.com/googlecreativelab/quickdraw-dataset)
 
 ---
 
