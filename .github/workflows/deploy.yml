@@ -39,6 +39,7 @@ jobs:
           echo "Downloading version $VERSION weights..."
           curl -L -f -o docs/mnist-model.bin "https://github.com/magikerwin/rust-drawing-classifier-web/releases/download/$VERSION/mnist-model.bin"
           curl -L -f -o docs/quickdraw-model.bin "https://github.com/magikerwin/rust-drawing-classifier-web/releases/download/$VERSION/quickdraw-model.bin"
+          curl -L -f -o docs/emnist-model.bin "https://github.com/magikerwin/rust-drawing-classifier-web/releases/download/$VERSION/emnist-model.bin"
 
       - name: Assert required files exist
         run: |
@@ -48,6 +49,7 @@ jobs:
           test -f docs/pkg/mnist_web_bg.wasm  || (echo "MISSING: docs/pkg/mnist_web_bg.wasm" && exit 1)
           test -f docs/mnist-model.bin        || (echo "MISSING: docs/mnist-model.bin" && exit 1)
           test -f docs/quickdraw-model.bin    || (echo "MISSING: docs/quickdraw-model.bin" && exit 1)
+          test -f docs/emnist-model.bin       || (echo "MISSING: docs/emnist-model.bin" && exit 1)
           echo "All required files present. Proceeding with deployment."
 
       - name: Setup Pages
