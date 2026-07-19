@@ -2,7 +2,7 @@
 
 > An interactive handwritten digit, letter, and doodle classifier built with the [Burn](https://burn.dev/) deep learning framework in Rust. Train a CNN model, run inference from the CLI, or draw in the browser!
 >
-> 🚀 **[Try the Live WebAssembly Demo!](https://magikerwin.github.io/burn-drawing-classifier-web/)**
+> 🚀 **[Try the Live WebAssembly Demo!](https://magikerwin.github.io/burn-drawing-classifier/)**
 
 ![image](assets/web_demo.webp)
 
@@ -59,7 +59,7 @@ Input [1×28×28]
 ## 📁 Project Structure
 
 ```
-burn-drawing-classifier-web/
+burn-drawing-classifier/
 ├── model_shared/           # Shared library workspace crate
 │   └── src/lib.rs          # CNN model definition & LayerNorm layers
 ├── web/                    # Rust WASM crate (wasm-pack entry point)

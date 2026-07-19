@@ -37,9 +37,9 @@ jobs:
         run: |
           VERSION=$(cat docs/weights-version.txt | xargs)
           echo "Downloading version $VERSION weights..."
-          curl -L -f -o docs/mnist-model.bin "https://github.com/magikerwin/burn-drawing-classifier-web/releases/download/$VERSION/mnist-model.bin"
-          curl -L -f -o docs/quickdraw-model.bin "https://github.com/magikerwin/burn-drawing-classifier-web/releases/download/$VERSION/quickdraw-model.bin"
-          curl -L -f -o docs/emnist-model.bin "https://github.com/magikerwin/burn-drawing-classifier-web/releases/download/$VERSION/emnist-model.bin"
+          curl -L -f -o docs/mnist-model.bin "https://github.com/magikerwin/burn-drawing-classifier/releases/download/$VERSION/mnist-model.bin"
+          curl -L -f -o docs/quickdraw-model.bin "https://github.com/magikerwin/burn-drawing-classifier/releases/download/$VERSION/quickdraw-model.bin"
+          curl -L -f -o docs/emnist-model.bin "https://github.com/magikerwin/burn-drawing-classifier/releases/download/$VERSION/emnist-model.bin"
 
       - name: Assert required files exist
         run: |
@@ -79,7 +79,7 @@ jobs:
           echo "Waiting 60s for GitHub Pages CDN to propagate..."
           sleep 60
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            https://magikerwin.github.io/burn-drawing-classifier-web/pkg/mnist_web_bg.wasm)
+            https://magikerwin.github.io/burn-drawing-classifier/pkg/mnist_web_bg.wasm)
           if [ "$STATUS" != "200" ]; then
             echo "ERROR: WASM file returned HTTP $STATUS — deployment may be broken!"
             exit 1
